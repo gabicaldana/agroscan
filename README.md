@@ -4,6 +4,9 @@ App web que o agrônomo abre no celular em campo, aponta a câmera para a planta
 e recebe o diagnóstico na hora - com descrição, manejo, nível de gravidade e as
 condições climáticas que favorecem o aparecimento.
 
+**▶ [agroscan-blond.vercel.app](https://agroscan-blond.vercel.app)** - instalável
+no celular e funcional em modo avião.
+
 > **Status:** fases 1 e 2 concluídas - motor de diagnóstico por sintomas
 > (Python, testado) e PWA instalável com o sistema de design completo.
 
