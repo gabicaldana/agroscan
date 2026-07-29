@@ -10,6 +10,10 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    // Os modulos de dominio se importam com a extensao `.ts` explicita, que e
+    // o que permite `node --test` rodar o motor direto, sem passo de build e
+    // sem nenhuma dependencia de teste.
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,

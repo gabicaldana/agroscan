@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --test \"lib/**/*.test.ts\"",
+    "base": "node scripts/gerar-base.mjs",
     "icones": "node scripts/gerar-icones.mjs"
   },
   "dependencies": {

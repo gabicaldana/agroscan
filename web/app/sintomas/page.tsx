@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { BotaoLink } from "@/components/Botao";
-import { EstadoVazio } from "@/components/EstadoVazio";
+import { PainelSintomas } from "@/components/PainelSintomas";
 
 export const metadata: Metadata = {
   title: "Buscar por sintomas - AgroScan",
@@ -15,22 +14,7 @@ export default function PaginaSintomas() {
         compatíveis e indica qual sintoma verificar para desempatar.
       </p>
 
-      <div className="mt-6">
-        <EstadoVazio
-          titulo="Chega na fase 3"
-          acao={
-            <BotaoLink href="/" variante="secundario">
-              Voltar ao scanner
-            </BotaoLink>
-          }
-        >
-          <p>
-            O motor de pontuação já existe e está testado em Python. A fase 3
-            porta essa lógica para o app e expande a base de conhecimento para
-            as 26 doenças cobertas pelo modelo.
-          </p>
-        </EstadoVazio>
-      </div>
+      <PainelSintomas />
     </div>
   );
 }

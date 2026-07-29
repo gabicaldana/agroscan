@@ -18,7 +18,7 @@
  * e uma resposta velha ali seria um diagnostico errado.
  */
 
-const VERSAO = "v2";
+const VERSAO = "v3";
 const CACHE_APP = `agroscan-app-${VERSAO}`;
 const CACHE_ESTATICO = `agroscan-estatico-${VERSAO}`;
 
@@ -126,14 +126,20 @@ self.addEventListener("fetch", (evento) => {
 
 async function redePrimeiro(request) {
   const cache = await caches.open(CACHE_APP);
+  // Guarda pela rota, sem a query string. "/resultado?doenca=x" e
+  // "/resultado?doenca=y" sao o MESMO documento: a pagina e uma casca e o
+  // laudo e montado no cliente a partir da base embutida. Cachear por URL
+  // completa encheria o cache com 29 copias identicas - e, pior, a primeira
+  // ficha aberta seria a unica a abrir offline.
+  const chave = new URL(request.url).pathname;
   try {
     const resposta = await fetch(request);
-    if (resposta.ok) cache.put(request, resposta.clone());
+    if (resposta.ok) cache.put(chave, resposta.clone());
     return resposta;
   } catch {
     // Offline: a propria rota, ou a raiz como ultimo recurso.
     return (
-      (await cache.match(request)) ??
+      (await cache.match(chave)) ??
       (await cache.match("/")) ??
       Response.error()
     );

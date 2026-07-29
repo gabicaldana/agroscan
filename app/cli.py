@@ -15,6 +15,7 @@ from app.diagnostico import (
     diagnosticar,
     listar_culturas,
     listar_sintomas_da_cultura,
+    melhor_pergunta,
 )
 
 LARGURA = 68
@@ -52,7 +53,8 @@ def perguntar_inteiro(prompt: str, minimo: int, maximo: int) -> int:
 
 
 def escolher_cultura() -> dict:
-    culturas = listar_culturas()
+    # So as culturas que tem doenca cadastrada: as demais seriam beco sem saida.
+    culturas = listar_culturas(apenas_com_doencas=True)
     titulo("QUAL E A CULTURA?")
     for i, c in enumerate(culturas, 1):
         print(f"  {i}. {c['emoji']}  {c['nome']}  ({c['nome_cientifico']})")
@@ -69,7 +71,7 @@ def escolher_sintomas(cultura: dict) -> set[str]:
     for i, s in enumerate(sintomas, 1):
         if s["orgao"] != orgao_atual:
             orgao_atual = s["orgao"]
-            print(f"\n  [{orgao_atual}]")
+            print(f"\n  [{s['orgao_rotulo']}]")
         print(f"  {i:>2}. {s['nome']}")
 
     print()
@@ -100,7 +102,19 @@ def mostrar_ranking(hipoteses: list) -> None:
 
         if h.sintomas_esperados_ausentes:
             print(f"     Para confirmar, verifique tambem: "
-                  f"{h.sintomas_esperados_ausentes[0]}")
+                  f"{h.sintomas_esperados_ausentes[0].nome}")
+        print()
+
+    pergunta = melhor_pergunta(hipoteses)
+    if pergunta:
+        regra()
+        print("PROXIMA OBSERVACAO A FAZER NA PLANTA")
+        print(f"  {pergunta.nome}")
+        if pergunta.descarta:
+            print(f"  Confirma {pergunta.confirma} e afasta {pergunta.descarta}.")
+        else:
+            print(f"  Ajuda a confirmar {pergunta.confirma}.")
+        regra()
         print()
 
 

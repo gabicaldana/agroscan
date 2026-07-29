@@ -7,8 +7,9 @@ condições climáticas que favorecem o aparecimento.
 **▶ [agroscan-blond.vercel.app](https://agroscan-blond.vercel.app)** - instalável
 no celular e funcional em modo avião.
 
-> **Status:** fases 1 e 2 concluídas - motor de diagnóstico por sintomas
-> (Python, testado) e PWA instalável com o sistema de design completo.
+> **Status:** fases 1 a 3 concluídas - o agrônomo já diagnostica de verdade,
+> marcando sintomas, sem foto nenhuma e sem rede. Base de 29 doenças, motor
+> em Python e TypeScript verificados um contra o outro.
 
 ---
 
@@ -36,7 +37,7 @@ Daí as três camadas de resposta:
                      │  confiança alta? ──sim──> laudo
                     não
         ┌────────────▼────────────┐
-        │  2. Fluxo por sintomas  │  motor da fase 1 · offline
+        │  2. Fluxo por sintomas  │  ✅ pronto · offline · sem foto
         └────────────┬────────────┘
                      │  cultura desconhecida (fora da distribuição)?
         ┌────────────▼────────────┐
@@ -45,8 +46,8 @@ Daí as três camadas de resposta:
         └────────────┬────────────┘
                      │
         ┌────────────▼────────────┐
-        │  base de conhecimento   │  JSON curado à mão · embutido no app
-        └─────────────────────────┘
+        │  base de conhecimento   │  ✅ 29 doenças · curada à mão
+        └─────────────────────────┘  embutida no bundle
                      │
       descrição · manejo · gravidade · clima · aviso legal
 ```
@@ -66,7 +67,14 @@ nunca saberíamos quando escalar.
 **Python e TypeScript com papéis separados.** Python fica com treino, export
 ONNX e validação da base. TypeScript fica com a aplicação. O motor de sintomas
 em Python permanece como *implementação de referência*, e o porte em TS é
-testado contra ele com fixtures compartilhadas.
+testado contra ele com fixtures compartilhadas - ver
+[Dois motores, um resultado](#dois-motores-um-resultado).
+
+**A base valida antes de carregar.** O JSON é curado à mão, e um id de sintoma
+com erro de digitação sumiria do perfil da doença em silêncio: o diagnóstico
+ficaria errado sem ninguém notar. `python -m app.db` recusa a carga e lista
+todos os problemas de uma vez - referência quebrada, peso fora da faixa,
+doença sem sintoma clássico, sintoma órfão no catálogo.
 
 ---
 
@@ -79,17 +87,30 @@ cd web
 npm install
 npm run dev        # http://localhost:3000
 npm run build      # build de produção
+npm test           # motor TS contra as fixtures do Python
+npm run base       # regera lib/base-conhecimento.ts a partir do JSON curado
 npm run icones     # regenera os ícones do PWA a partir do código
 ```
+
+`npm test` usa o runner nativo do Node (`node --test`), que roda TypeScript
+direto: nenhuma dependência de teste, nenhum passo de build.
 
 ### Motor de diagnóstico (Python)
 
 Sem dependências externas - só a biblioteca padrão.
 
 ```bash
-python -m app.db      # gera data/agroscan.db a partir do JSON
-python -m app.cli     # diagnóstico interativo no terminal
+python -m app.db          # valida o JSON e gera data/agroscan.db
+python -m app.cli         # diagnóstico interativo no terminal
+python -m app.fixtures    # regera as fixtures compartilhadas com o TS
 python -m unittest discover -s tests -t .
+```
+
+### Depois de mexer na base de conhecimento
+
+```bash
+python -m app.db && python -m app.fixtures    # revalida e regera as fixtures
+cd web && npm run base && npm test            # regera o módulo e confere
 ```
 
 ---
@@ -117,9 +138,101 @@ a interface diz "compatibilidade", nunca "92% de confiança". Quando o modelo de
 imagem entrar, ele produzirá uma confiança de verdade - e os dois sinais vão
 conviver rotulados de forma distinta.
 
-Efeito colateral útil: o sintoma faltante de maior peso é, por construção, a
-**melhor pergunta de desempate**. É ele que o sistema sugere verificar, e é ele
-que o app perguntará quando a CNN devolver confiança baixa.
+### A pergunta de desempate
+
+Ter os pesos permite fazer algo que contar sintomas não permitiria: dizer ao
+agrônomo **o que ir olhar em seguida**.
+
+Entre os sintomas que a hipótese líder espera e que ainda não foram marcados,
+o motor escolhe o de maior `peso na líder − peso na segunda`. Essa diferença é
+exatamente o quanto a resposta afasta as duas: se o sintoma estiver presente,
+ambas ganham, mas a líder ganha a mais justamente essa diferença.
+
+Pegar simplesmente o de maior peso não funciona - o sintoma mais
+característico da líder costuma ser característico da concorrente também, que
+é justamente por que as duas empataram. Anéis concêntricos não separam
+pinta-preta de mancha-alvo: as duas os fazem. A lesão no fruto separa.
+
+A tela só promete "afasta X" quando a segunda hipótese não espera aquele
+sintoma de forma alguma. Quando as duas o esperam, ela diz que a observação
+confirma mas não desempata - o motor não deixa a interface prometer mais do
+que ele sabe.
+
+---
+
+## Dois motores, um resultado
+
+O motor existe duas vezes: em Python (`app/diagnostico.py`, a referência) e em
+TypeScript (`web/lib/diagnostico.ts`, o que roda no celular). Duas
+implementações da mesma regra divergem sozinhas - basta um arredondamento
+diferente.
+
+O contrato é um arquivo de fixtures gerado pelo Python e versionado:
+
+```
+data/base_conhecimento.json          fonte da verdade, curada à mão
+        │
+        ├─ python -m app.fixtures ──> tests/fixtures/casos_diagnostico.json
+        │                                  │            76 casos
+        │                                  ├──> teste Python: o motor ainda
+        │                                  │    produz exatamente este arquivo
+        │                                  └──> teste TS: o porte reproduz
+        │                                       cada campo de cada caso
+        └─ npm run base ───────────> web/lib/base-conhecimento.ts
+```
+
+Os 76 casos incluem o perfil completo e o sintoma isolado de cada uma das 29
+doenças, além dos casos escolhidos a mão para ruído, ambiguidade, desempate e
+limiar. Mudar um peso na base sem regerar as fixtures quebra os dois lados -
+que é o objetivo.
+
+Três armadilhas de portabilidade apareceram e estão tratadas no código:
+
+| Armadilha | Sintoma | Solução |
+|---|---|---|
+| `sum()` do CPython usa soma compensada de Neumaier; `reduce` do JS soma ingenuamente | `0.7+0.6+0.5+0.3` dá 2.1 num lado e 2.0999999999999996 no outro | o porte replica a compensação |
+| `round()` do Python arredonda meio para o par; `Math.round` arredonda meio para cima | 12.5% vira 12% num lado e 13% no outro | o porte replica o meio-para-o-par |
+| Ordenar strings por código de caractere joga acento para depois do `z` | "Pêssego" depois de "Pimentão"; "Ácaros" no fim da lista | os dois removem diacríticos (NFD) antes de comparar |
+
+Nenhuma delas mudaria um número na tela - erram na décima-sexta casa decimal
+ou em um ponto percentual isolado. Mas comparar com tolerância deixaria passar
+justamente as divergências reais que o teste existe para pegar, então a
+igualdade é exata.
+
+Também são comparados o catálogo de sintomas de cada cultura e as 29 fichas
+completas: **126 testes**, cobrindo toda a base.
+
+---
+
+## A base de conhecimento
+
+29 doenças em 12 culturas, com descrição, condições favoráveis, manejo
+integrado e ingredientes ativos de referência. É trabalho de curadoria
+agronômica, não de programação - e é o gargalo real do projeto.
+
+**26 delas são exatamente as doenças do PlantVillage.** O dataset tem 38
+classes: 26 de doença e 12 de planta saudável. Cada uma das 26 já tem conteúdo
+pronto aqui, ligado à classe do modelo pelo campo `classe_modelo` - quando a
+CNN entrar na fase 4, não haverá classe sem laudo.
+
+**As outras 3 não têm classe no modelo** e trazem `classe_modelo: null`:
+ferrugem asiática e mofo branco da soja, e oídio do tomateiro. O PlantVillage
+não cobre nenhuma doença de soja, e um app brasileiro sem ferrugem asiática
+seria estranho. Elas são alcançadas só pelo fluxo por sintomas, e o laudo diz
+isso na cara: *"o modelo de imagem não cobre esta doença"*.
+
+Mirtilo e framboesa ficam de fora do fluxo por sintomas: o dataset só as
+conhece como saudáveis, e oferecê-las seria um beco sem saída.
+
+O catálogo tem 47 sintomas, agrupados pela parte da planta e filtrados por
+cultura - cada cultura usa entre 2 e 20 deles. Mostrar os 47 numa tela de
+celular sob sol seria um formulário ilegível.
+
+Os pesos codificam agronomia, não intuição. Onde duas doenças são
+genuinamente confundíveis no campo, a base não força uma separação artificial:
+pinta-preta e mancha-alvo do tomate empatam nos anéis concêntricos porque as
+duas realmente os fazem, e a descrição da mancha-alvo diz onde olhar para
+separar as duas. Fingir certeza aqui seria pior que a dúvida.
 
 ---
 
@@ -147,7 +260,7 @@ rótulo textual, para continuar legível por quem não distingue as cores.
 |------|---------|--------|
 | 1 | Base de conhecimento + motor de sintomas + CLI | ✅ |
 | 2 | PWA instalável, sistema de design, telas navegáveis | ✅ |
-| 3 | Base expandida para 26 doenças + motor portado para TS | ⬜ |
+| 3 | Base de 29 doenças, motor portado para TS, tela de sintomas | ✅ |
 | 4 | Modelo em Colab + validação honesta em campo | ⬜ |
 | 5 | Câmera e inferência local com máscara e recusa | ⬜ |
 | 6 | Escalonamento para qualquer planta | ⬜ |
@@ -180,13 +293,22 @@ ser conferido no **AGROFIT/MAPA**.
 ## Estrutura
 
 ```
-data/base_conhecimento.json   fonte da verdade - conteúdo agronômico curado
-app/                          Python: motor de referência + tooling de dados
-tests/                        testes do motor
-web/                          Next.js 16 · TypeScript · Tailwind 4 · PWA
-  app/                        rotas (App Router)
-  components/                 UI do sistema de design
-  lib/                        domínio (culturas, diagnóstico, modelo)
-  public/sw.js                service worker escrito à mão
-  scripts/gerar-icones.mjs    ícones do PWA reprodutíveis por código
+data/base_conhecimento.json         fonte da verdade - conteúdo agronômico curado
+app/                                Python: motor de referência + tooling de dados
+  db.py                             schema, validação e carga no SQLite
+  diagnostico.py                    motor de referência
+  fixtures.py                       gera o contrato compartilhado com o TS
+tests/
+  test_diagnostico.py               testes do motor de referência
+  fixtures/                         entrada + saída esperada, versionadas
+web/                                Next.js 16 · TypeScript · Tailwind 4 · PWA
+  app/                              rotas (App Router)
+  components/                       UI do sistema de design
+  lib/
+    diagnostico.ts                  porte do motor - roda no navegador
+    diagnostico.test.ts             paridade com o Python, via fixtures
+    base-conhecimento.ts            gerado do JSON por `npm run base`
+  public/sw.js                      service worker escrito à mão
+  scripts/gerar-base.mjs            JSON curado → módulo TS embutido no bundle
+  scripts/gerar-icones.mjs          ícones do PWA reprodutíveis por código
 ```

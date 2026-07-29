@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { BotaoLink, Botao } from "@/components/Botao";
-import { CULTURAS } from "@/lib/culturas";
+import { SeletorCultura } from "@/components/SeletorCultura";
+import { listarCulturas } from "@/lib/diagnostico.ts";
+
+const CULTURAS = listarCulturas();
 
 export function PainelScanner() {
   const [culturaId, setCulturaId] = useState("Tomato");
@@ -10,30 +13,11 @@ export function PainelScanner() {
 
   return (
     <div className="mt-6 flex flex-col gap-6">
-      <div>
-        <label
-          htmlFor="cultura"
-          className="mb-2 block text-base font-bold"
-        >
-          Cultura
-        </label>
-        <select
-          id="cultura"
-          value={culturaId}
-          onChange={(e) => setCulturaId(e.target.value)}
-          className="border-borda-forte bg-fundo h-toque w-full rounded-lg border-2 px-4 text-base font-semibold"
-        >
-          {CULTURAS.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.emoji}  {c.nome}
-            </option>
-          ))}
-        </select>
-        <p className="text-texto-suave mt-2 text-sm">
-          Informar a cultura restringe o modelo às doenças que realmente
-          ocorrem nela - reduz bastante o erro.
-        </p>
-      </div>
+      <SeletorCultura
+        valor={culturaId}
+        aoTrocar={setCulturaId}
+        ajuda="Informar a cultura restringe o modelo às doenças que realmente ocorrem nela - reduz bastante o erro."
+      />
 
       <Visor legenda={cultura ? `Centralize a folha de ${cultura.nome.toLowerCase()}` : "Centralize a folha"} />
 
