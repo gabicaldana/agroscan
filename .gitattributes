@@ -1,0 +1,12 @@
+# Fim de linha LF em todo lugar, inclusive na copia de trabalho no Windows.
+#
+# Sem isto, o git converte para CRLF ao clonar em Windows (core.autocrlf) e o
+# teste que confere se web/lib/base-conhecimento.ts esta atualizado passa a
+# falhar num clone limpo: ele compara o arquivo com a saida do gerador, que
+# escreve LF. O mesmo valeria para as fixtures compartilhadas.
+#
+# Arquivo gerado que so o script deve tocar - marcado para nao poluir o diff.
+* text=auto eol=lf
+web/lib/base-conhecimento.ts linguist-generated=true
+tests/fixtures/casos_diagnostico.json linguist-generated=true
+*.png binary
