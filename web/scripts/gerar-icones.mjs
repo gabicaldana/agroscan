@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 const VERDE = "#15803d";
 const BRANCO = "#ffffff";
 
-/** Folha estilizada dentro de uma moldura de visor — o gesto do app. */
+/** Folha estilizada dentro de uma moldura de visor - o gesto do app. */
 function svg({ fundo, traco, escala }) {
   const margem = (1 - escala) / 2;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">

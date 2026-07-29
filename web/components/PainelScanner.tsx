@@ -31,7 +31,7 @@ export function PainelScanner() {
         </select>
         <p className="text-texto-suave mt-2 text-sm">
           Informar a cultura restringe o modelo às doenças que realmente
-          ocorrem nela — reduz bastante o erro.
+          ocorrem nela - reduz bastante o erro.
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export function PainelScanner() {
 }
 
 /**
- * Moldura-guia do visor. Os cantos marcam onde a folha deve ficar — o
+ * Moldura-guia do visor. Os cantos marcam onde a folha deve ficar - o
  * enquadramento consistente e o que faz o pre-processamento da imagem bater
  * com o do treino.
  */

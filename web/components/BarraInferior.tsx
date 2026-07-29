@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Navegacao ancorada na base — zona alcancavel pelo polegar com o
+ * Navegacao ancorada na base - zona alcancavel pelo polegar com o
  * celular numa mao so, que e como o agronomo vai usar em campo.
  */
 const ABAS = [

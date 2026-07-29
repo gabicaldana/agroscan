@@ -3,7 +3,7 @@ import { BotaoLink } from "@/components/Botao";
 import { EstadoVazio } from "@/components/EstadoVazio";
 
 export const metadata: Metadata = {
-  title: "Buscar por sintomas — AgroScan",
+  title: "Buscar por sintomas - AgroScan",
 };
 
 export default function PaginaSintomas() {

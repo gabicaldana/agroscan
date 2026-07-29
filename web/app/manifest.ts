@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "AgroScan — diagnóstico de doenças em plantas",
+    name: "AgroScan - diagnóstico de doenças em plantas",
     short_name: "AgroScan",
     description:
       "Identifique doenças em culturas agrícolas pela câmera do celular, em campo e offline.",

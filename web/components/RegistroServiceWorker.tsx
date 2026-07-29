@@ -5,7 +5,7 @@ import { useEffect } from "react";
 /**
  * Registra o service worker que torna o app utilizavel offline.
  *
- * Nao renderiza nada — existe so pelo efeito. Falha silenciosa e
+ * Nao renderiza nada - existe so pelo efeito. Falha silenciosa e
  * proposital: sem service worker o app continua funcionando com rede,
  * so perde o offline.
  */

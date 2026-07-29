@@ -3,7 +3,7 @@ import { BotaoLink } from "@/components/Botao";
 import { EstadoVazio } from "@/components/EstadoVazio";
 
 export const metadata: Metadata = {
-  title: "Caderno de campo — AgroScan",
+  title: "Caderno de campo - AgroScan",
 };
 
 export default function PaginaCaderno() {

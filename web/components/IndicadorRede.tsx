@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  *
  * Nao e enfeite: a camada de analise avancada (que envia a foto para uma
  * API) so existe com rede. O agronomo precisa saber, antes de tentar, se
- * aquela opcao esta disponivel — e o app precisa dizer isso sem que ele
+ * aquela opcao esta disponivel - e o app precisa dizer isso sem que ele
  * tenha que descobrir por tentativa e erro no meio da lavoura.
  */
 export function useEstaOnline(): boolean | null {

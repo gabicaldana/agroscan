@@ -18,7 +18,7 @@
   --color-borda: #d6d3d1;
   --color-borda-forte: #a8a29e;
   --color-texto: #1c1917; /* 17.9:1 sobre o fundo */
-  --color-texto-suave: #57534e; /* 7.5:1 — ainda AAA */
+  --color-texto-suave: #57534e; /* 7.5:1 - ainda AAA */
 
   /* --- identidade --- */
   --color-primaria: #15803d; /* branco em cima da 5.1:1 */
@@ -66,7 +66,7 @@ body {
   touch-action: manipulation;
 }
 
-/* Foco sempre visivel e grosso — no sol, um anel fino desaparece. */
+/* Foco sempre visivel e grosso - no sol, um anel fino desaparece. */
 :focus-visible {
   outline: 3px solid var(--color-primaria);
   outline-offset: 2px;

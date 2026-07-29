@@ -29,7 +29,7 @@ export function AvisoLegal({
       )}
 
       <p className="mt-2 text-sm">
-        Sistema educativo — não substitui a avaliação de um engenheiro
+        Sistema educativo - não substitui a avaliação de um engenheiro
         agrônomo. No Brasil, a aquisição e a aplicação de defensivos agrícolas
         exigem <strong>receituário agronômico</strong>. Os ingredientes ativos
         citados são referência técnica; confira o registro válido para a sua

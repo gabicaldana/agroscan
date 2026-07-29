@@ -4,7 +4,7 @@ import { BarraGravidade } from "@/components/BarraGravidade";
 import { BotaoLink } from "@/components/Botao";
 
 export const metadata: Metadata = {
-  title: "Laudo — AgroScan",
+  title: "Laudo - AgroScan",
 };
 
 /**
@@ -19,7 +19,7 @@ export default function PaginaResultado() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <p className="border-borda-forte text-texto-suave mb-4 inline-block rounded-full border-2 px-3 py-1 text-xs font-bold tracking-wide uppercase">
-        Prévia do layout — dados de exemplo
+        Prévia do layout - dados de exemplo
       </p>
 
       <div className="flex items-start gap-3">

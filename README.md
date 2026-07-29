@@ -1,10 +1,10 @@
-# AgroScan — diagnóstico de doenças em plantas
+# AgroScan - diagnóstico de doenças em plantas
 
 App web que o agrônomo abre no celular em campo, aponta a câmera para a planta
-e recebe o diagnóstico na hora — com descrição, manejo, nível de gravidade e as
+e recebe o diagnóstico na hora - com descrição, manejo, nível de gravidade e as
 condições climáticas que favorecem o aparecimento.
 
-> **Status:** fases 1 e 2 concluídas — motor de diagnóstico por sintomas
+> **Status:** fases 1 e 2 concluídas - motor de diagnóstico por sintomas
 > (Python, testado) e PWA instalável com o sistema de design completo.
 
 ---
@@ -13,7 +13,7 @@ condições climáticas que favorecem o aparecimento.
 
 **1. Campo tem sinal ruim ou nenhum.** Se a foto precisa subir para uma API, o
 app falha exatamente onde deveria funcionar. A inferência principal roda **no
-navegador**, offline, com o modelo em cache. Isso não é economia de servidor —
+navegador**, offline, com o modelo em cache. Isso não é economia de servidor -
 é requisito funcional.
 
 **2. Classificador fechado mente.** Um modelo treinado em N culturas responde
@@ -53,7 +53,7 @@ Daí as três camadas de resposta:
 **Máscara por cultura.** O PlantVillage empacota cultura e doença na mesma
 classe (`Tomato___Early_blight`), mas o agrônomo *sabe* o que plantou. Ao
 selecionar a cultura, as classes das outras 13 são zeradas e o softmax é
-renormalizado — o modelo perde a chance de confundir pinta-preta de tomate com
+renormalizado - o modelo perde a chance de confundir pinta-preta de tomate com
 requeima de batata.
 
 **Recusa antes de responder.** O app decide se a imagem pertence ao domínio
@@ -81,7 +81,7 @@ npm run icones     # regenera os ícones do PWA a partir do código
 
 ### Motor de diagnóstico (Python)
 
-Sem dependências externas — só a biblioteca padrão.
+Sem dependências externas - só a biblioteca padrão.
 
 ```bash
 python -m app.db      # gera data/agronomia.db a partir do JSON
@@ -102,16 +102,16 @@ compatibilidade = ────────────────────�
                   acertos + faltantes + ruído × 0.5
 ```
 
-- **acertos** — soma dos pesos dos sintomas marcados que a doença explica
-- **faltantes** — soma dos pesos dos sintomas típicos que o usuário não marcou
-- **ruído** — quantidade de sintomas marcados que a doença não explica
+- **acertos** - soma dos pesos dos sintomas marcados que a doença explica
+- **faltantes** - soma dos pesos dos sintomas típicos que o usuário não marcou
+- **ruído** - quantidade de sintomas marcados que a doença não explica
 
 É uma variante ponderada do índice de Tversky. O denominador penaliza os dois
 erros possíveis: quadro incompleto e quadro contaminado.
 
 **Isto não é uma probabilidade.** Não existe modelo probabilístico por trás, e
 a interface diz "compatibilidade", nunca "92% de confiança". Quando o modelo de
-imagem entrar, ele produzirá uma confiança de verdade — e os dois sinais vão
+imagem entrar, ele produzirá uma confiança de verdade - e os dois sinais vão
 conviver rotulados de forma distinta.
 
 Efeito colateral útil: o sintoma faltante de maior peso é, por construção, a
@@ -120,14 +120,14 @@ que o app perguntará quando a CNN devolver confiança baixa.
 
 ---
 
-## Sistema de design — "ferramenta de campo"
+## Sistema de design - "ferramenta de campo"
 
 O contexto de uso dita o visual: sol a pino, mão suja, talvez luva, pressa.
 
 | Decisão | Razão |
 |---|---|
 | Fundo branco puro | máximo brilho reflexivo sob sol direto |
-| Texto `#1C1917` — contraste 17.9:1 | muito acima do mínimo AAA |
+| Texto `#1C1917` - contraste 17.9:1 | muito acima do mínimo AAA |
 | Bordas sólidas de 2px, sem sombras | sombra desaparece na luz do sol |
 | Corpo de 18px | acima do padrão web de 16px |
 | Alvo de toque de 56px | acima dos 44px de guideline, por causa de luva |
@@ -177,7 +177,7 @@ ser conferido no **AGROFIT/MAPA**.
 ## Estrutura
 
 ```
-data/base_conhecimento.json   fonte da verdade — conteúdo agronômico curado
+data/base_conhecimento.json   fonte da verdade - conteúdo agronômico curado
 app/                          Python: motor de referência + tooling de dados
 tests/                        testes do motor
 web/                          Next.js 16 · TypeScript · Tailwind 4 · PWA

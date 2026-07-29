@@ -9,7 +9,7 @@ const ROTULOS: Record<NivelGravidade, string> = {
 };
 
 // Classes escritas por extenso porque o Tailwind varre o codigo-fonte em
-// busca de nomes de classe literais — `bg-grav-${nivel}` nunca seria gerado.
+// busca de nomes de classe literais - `bg-grav-${nivel}` nunca seria gerado.
 const CORES: Record<NivelGravidade, string> = {
   1: "bg-grav-1",
   2: "bg-grav-2",

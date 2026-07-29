@@ -3,7 +3,7 @@
  *
  * O `id` casa com o prefixo das classes do dataset (`Tomato___Early_blight`),
  * porque e ele que vai selecionar quais saidas do modelo permanecem ativas
- * na mascara por cultura — ver `lib/modelo.ts` (fase 5).
+ * na mascara por cultura - ver `lib/modelo.ts` (fase 5).
  *
  * Fora desta lista o app nao chuta: recusa e oferece a analise avancada.
  */
