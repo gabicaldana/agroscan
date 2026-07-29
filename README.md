@@ -84,7 +84,7 @@ npm run icones     # regenera os ícones do PWA a partir do código
 Sem dependências externas - só a biblioteca padrão.
 
 ```bash
-python -m app.db      # gera data/agronomia.db a partir do JSON
+python -m app.db      # gera data/agroscan.db a partir do JSON
 python -m app.cli     # diagnóstico interativo no terminal
 python -m unittest discover -s tests -t .
 ```

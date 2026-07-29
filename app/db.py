@@ -13,7 +13,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 CAMINHO_JSON = RAIZ / "data" / "base_conhecimento.json"
-CAMINHO_DB = RAIZ / "data" / "agronomia.db"
+CAMINHO_DB = RAIZ / "data" / "agroscan.db"
 
 SCHEMA = """
 DROP TABLE IF EXISTS doenca_sintoma;
