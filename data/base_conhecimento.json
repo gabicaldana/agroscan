@@ -1,0 +1,314 @@
+{
+  "_comentario": "Base de conhecimento curada manualmente. Fontes de referencia: Embrapa, Manual de Fitopatologia (Amorim et al.), AGROFIT/MAPA. Esta e a FONTE DA VERDADE do projeto - o modelo de imagem (fase 4) apenas aponta qual doenca, todo o conteudo abaixo vem daqui.",
+
+  "sintomas": [
+    { "id": "manchas_escuras_aneis", "nome": "Manchas escuras com aneis concentricos", "orgao": "folha" },
+    { "id": "manchas_amareladas", "nome": "Manchas amareladas (cloroticas)", "orgao": "folha" },
+    { "id": "manchas_encharcadas", "nome": "Lesoes encharcadas / aspecto de queimadura", "orgao": "folha" },
+    { "id": "mofo_branco_face_inferior", "nome": "Mofo esbranquicado na face inferior da folha", "orgao": "folha" },
+    { "id": "po_branco_superficie", "nome": "Po branco na superficie da folha", "orgao": "folha" },
+    { "id": "pustulas_ferruginosas", "nome": "Pustulas cor de ferrugem que soltam po", "orgao": "folha" },
+    { "id": "manchas_pequenas_centro_claro", "nome": "Manchas pequenas com centro claro e borda escura", "orgao": "folha" },
+    { "id": "desfolha_baixo_para_cima", "nome": "Queda de folhas comecando pelas mais baixas", "orgao": "planta" },
+    { "id": "murcha", "nome": "Murcha da planta", "orgao": "planta" },
+    { "id": "lesoes_no_caule", "nome": "Lesoes escuras no caule ou haste", "orgao": "caule" },
+    { "id": "lesoes_no_fruto", "nome": "Lesoes deprimidas ou podridao no fruto", "orgao": "fruto" },
+    { "id": "folhas_deformadas", "nome": "Folhas deformadas, enroladas ou reduzidas", "orgao": "folha" },
+    { "id": "mosaico_verde_claro_escuro", "nome": "Mosaico de verde claro e escuro nas folhas", "orgao": "folha" },
+    { "id": "nervuras_amareladas", "nome": "Amarelecimento entre as nervuras", "orgao": "folha" },
+    { "id": "insetos_face_inferior", "nome": "Insetos pequenos na face inferior da folha", "orgao": "folha" },
+    { "id": "crescimento_reduzido", "nome": "Crescimento reduzido / nanismo", "orgao": "planta" }
+  ],
+
+  "culturas": [
+    {
+      "id": "tomate",
+      "nome": "Tomate",
+      "nome_cientifico": "Solanum lycopersicum",
+      "emoji": "🍅",
+      "doencas": [
+        {
+          "id": "tomate_pinta_preta",
+          "nome": "Pinta-preta (Mancha de Alternaria)",
+          "agente": "Alternaria solani",
+          "tipo_agente": "fungo",
+          "gravidade": 4,
+          "descricao": "Doenca foliar muito comum no tomateiro. Comeca pelas folhas mais velhas, proximas ao solo, e progride para cima. As lesoes sao escuras e apresentam aneis concentricos caracteristicos, que lembram um alvo. Em ataques severos causa desfolha intensa, expondo os frutos ao sol e reduzindo drasticamente a produtividade.",
+          "sintomas": [
+            { "id": "manchas_escuras_aneis", "peso": 1.0 },
+            { "id": "desfolha_baixo_para_cima", "peso": 0.8 },
+            { "id": "manchas_amareladas", "peso": 0.4 },
+            { "id": "lesoes_no_caule", "peso": 0.4 },
+            { "id": "lesoes_no_fruto", "peso": 0.3 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "24 a 29 C",
+            "umidade": "Alta, com molhamento foliar prolongado (acima de 8h)",
+            "observacao": "Alternancia de periodos umidos e secos favorece o ciclo. Comum em lavouras com adubacao nitrogenada deficiente e plantas debilitadas apos a frutificacao."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Rotacao de culturas por no minimo 2 anos, evitando solanaceas (batata, berinjela, pimentao)." },
+            { "tipo": "cultural", "descricao": "Eliminar restos culturais e plantas voluntarias, que sao fonte de inoculo." },
+            { "tipo": "cultural", "descricao": "Irrigacao por gotejamento em vez de aspersao, para reduzir o molhamento foliar." },
+            { "tipo": "cultural", "descricao": "Manter nutricao equilibrada; plantas bem nutridas toleram melhor a doenca." },
+            { "tipo": "quimico", "descricao": "Fungicidas protetores em aplicacoes preventivas, alternando com sistemicos para evitar resistencia." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Mancozebe", "grupo": "Ditiocarbamato", "acao": "protetor" },
+            { "nome": "Clorotalonil", "grupo": "Isoftalonitrila", "acao": "protetor" },
+            { "nome": "Azoxistrobina", "grupo": "Estrobilurina", "acao": "sistemico" },
+            { "nome": "Difenoconazol", "grupo": "Triazol", "acao": "sistemico" }
+          ]
+        },
+        {
+          "id": "tomate_requeima",
+          "nome": "Requeima (Mildio)",
+          "agente": "Phytophthora infestans",
+          "tipo_agente": "oomiceto",
+          "gravidade": 5,
+          "descricao": "A doenca mais destrutiva do tomateiro. Em condicoes favoraveis pode destruir uma lavoura inteira em poucos dias. As lesoes sao grandes, de aspecto encharcado, com coloracao verde-escura a marrom, e frequentemente apresentam um mofo branco acinzentado na face inferior da folha em manhas umidas.",
+          "sintomas": [
+            { "id": "manchas_encharcadas", "peso": 1.0 },
+            { "id": "mofo_branco_face_inferior", "peso": 0.9 },
+            { "id": "lesoes_no_caule", "peso": 0.6 },
+            { "id": "lesoes_no_fruto", "peso": 0.6 },
+            { "id": "murcha", "peso": 0.3 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "12 a 20 C (noites frias)",
+            "umidade": "Muito alta, acima de 90%, com neblina ou chuvas frequentes",
+            "observacao": "Epoca classica: outono/inverno em regioes serranas. Combinacao de noite fria e umida com dia ameno e o cenario ideal para epidemia explosiva."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Usar mudas sadias e cultivares com resistencia quando disponiveis." },
+            { "tipo": "cultural", "descricao": "Aumentar espacamento e conducao para melhorar a ventilacao no dossel." },
+            { "tipo": "cultural", "descricao": "Eliminar e destruir plantas doentes imediatamente - nao deixar no campo." },
+            { "tipo": "quimico", "descricao": "Controle estritamente preventivo. Curativo raramente funciona. Aplicar antes do periodo de risco climatico." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Mancozebe", "grupo": "Ditiocarbamato", "acao": "protetor" },
+            { "nome": "Cimoxanil", "grupo": "Cianoacetamida-oxima", "acao": "sistemico" },
+            { "nome": "Metalaxil-M", "grupo": "Acilalaninato", "acao": "sistemico" },
+            { "nome": "Fluazinam", "grupo": "Fenilpiridinilamina", "acao": "protetor" }
+          ]
+        },
+        {
+          "id": "tomate_septoriose",
+          "nome": "Septoriose (Mancha-de-septoria)",
+          "agente": "Septoria lycopersici",
+          "tipo_agente": "fungo",
+          "gravidade": 3,
+          "descricao": "Provoca grande numero de manchas pequenas e circulares nas folhas, com centro acinzentado ou palido e borda escura bem definida. E frequentemente confundida com a pinta-preta, mas as lesoes sao menores, muito mais numerosas e nao apresentam os aneis concentricos.",
+          "sintomas": [
+            { "id": "manchas_pequenas_centro_claro", "peso": 1.0 },
+            { "id": "desfolha_baixo_para_cima", "peso": 0.7 },
+            { "id": "manchas_amareladas", "peso": 0.4 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "20 a 25 C",
+            "umidade": "Alta, com chuvas frequentes e respingos de solo",
+            "observacao": "Dissemina-se principalmente por respingos de agua da chuva ou irrigacao por aspersao levando esporos do solo para as folhas baixeiras."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Cobertura morta (mulching) no solo para reduzir respingos." },
+            { "tipo": "cultural", "descricao": "Rotacao de culturas e eliminacao de restos culturais." },
+            { "tipo": "quimico", "descricao": "Fungicidas protetores em programa preventivo, iniciando antes do fechamento do dossel." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Clorotalonil", "grupo": "Isoftalonitrila", "acao": "protetor" },
+            { "nome": "Mancozebe", "grupo": "Ditiocarbamato", "acao": "protetor" },
+            { "nome": "Difenoconazol", "grupo": "Triazol", "acao": "sistemico" }
+          ]
+        },
+        {
+          "id": "tomate_geminivirus",
+          "nome": "Geminivirose (Mosaico dourado)",
+          "agente": "Begomovirus, transmitido por mosca-branca (Bemisia tabaci)",
+          "tipo_agente": "virus",
+          "gravidade": 5,
+          "descricao": "Doenca viral sem controle curativo. A planta apresenta amarelecimento intenso, folhas deformadas e reduzidas, e forte nanismo. Plantas infectadas jovens praticamente nao produzem. O controle e feito exclusivamente sobre o inseto vetor, a mosca-branca.",
+          "sintomas": [
+            { "id": "nervuras_amareladas", "peso": 0.9 },
+            { "id": "folhas_deformadas", "peso": 1.0 },
+            { "id": "crescimento_reduzido", "peso": 0.9 },
+            { "id": "mosaico_verde_claro_escuro", "peso": 0.6 },
+            { "id": "insetos_face_inferior", "peso": 0.8 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "25 a 32 C",
+            "umidade": "Baixa a moderada - clima seco e quente favorece a mosca-branca",
+            "observacao": "Epidemias sao ligadas a populacao do vetor. Proximidade de lavouras de soja, feijao ou algodao em fim de ciclo aumenta muito o risco de migracao da mosca-branca."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Nao ha controle curativo. Arrancar e destruir plantas infectadas para reduzir a fonte de virus." },
+            { "tipo": "cultural", "descricao": "Producao de mudas em ambiente protegido com tela anti-afideo." },
+            { "tipo": "cultural", "descricao": "Vazio sanitario e evitar plantios escalonados proximos entre si." },
+            { "tipo": "biologico", "descricao": "Preservar inimigos naturais da mosca-branca, como Encarsia formosa e fungos entomopatogenicos." },
+            { "tipo": "quimico", "descricao": "Controle do vetor com inseticidas, alternando modos de acao para retardar resistencia." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Imidacloprido", "grupo": "Neonicotinoide", "acao": "inseticida sistemico (vetor)" },
+            { "nome": "Espiromesifeno", "grupo": "Cetoenol", "acao": "inseticida (vetor)" },
+            { "nome": "Pyriproxyfen", "grupo": "Regulador de crescimento", "acao": "inseticida (vetor)" }
+          ]
+        },
+        {
+          "id": "tomate_oidio",
+          "nome": "Oidio",
+          "agente": "Oidiopsis taurica / Leveillula taurica",
+          "tipo_agente": "fungo",
+          "gravidade": 3,
+          "descricao": "Caracteriza-se por manchas amareladas na face superior da folha e crescimento de um po esbranquicado, geralmente na face inferior. Diferente da maioria dos fungos foliares, o oidio se desenvolve bem em condicoes de baixa umidade relativa.",
+          "sintomas": [
+            { "id": "po_branco_superficie", "peso": 1.0 },
+            { "id": "manchas_amareladas", "peso": 0.7 },
+            { "id": "desfolha_baixo_para_cima", "peso": 0.4 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "20 a 27 C",
+            "umidade": "Moderada a baixa - nao exige molhamento foliar",
+            "observacao": "Comum em cultivo protegido (estufa) e em periodos secos. E a excecao entre as doencas fungicas: agua livre na folha atrapalha sua germinacao."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Melhorar ventilacao, especialmente em estufas." },
+            { "tipo": "biologico", "descricao": "Aplicacoes de Bacillus subtilis tem bom efeito preventivo." },
+            { "tipo": "quimico", "descricao": "Fungicidas a base de enxofre ou triazois em aplicacoes preventivas." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Enxofre", "grupo": "Inorganico", "acao": "protetor" },
+            { "nome": "Tebuconazol", "grupo": "Triazol", "acao": "sistemico" },
+            { "nome": "Azoxistrobina", "grupo": "Estrobilurina", "acao": "sistemico" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "soja",
+      "nome": "Soja",
+      "nome_cientifico": "Glycine max",
+      "emoji": "🌱",
+      "doencas": [
+        {
+          "id": "soja_ferrugem_asiatica",
+          "nome": "Ferrugem asiatica",
+          "agente": "Phakopsora pachyrhizi",
+          "tipo_agente": "fungo",
+          "gravidade": 5,
+          "descricao": "Principal doenca da soja no Brasil. Forma pustulas (ureias) na face inferior das folhas que liberam esporos cor de ferrugem. Causa desfolha precoce e enchimento incompleto de graos. Perdas podem passar de 80% sem controle.",
+          "sintomas": [
+            { "id": "pustulas_ferruginosas", "peso": 1.0 },
+            { "id": "manchas_amareladas", "peso": 0.6 },
+            { "id": "desfolha_baixo_para_cima", "peso": 0.8 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "18 a 26 C",
+            "umidade": "Molhamento foliar de 6h ou mais; alta umidade relativa",
+            "observacao": "Periodos chuvosos prolongados com temperatura amena. O vazio sanitario da soja existe justamente para quebrar o ciclo desse fungo na entressafra."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Respeitar o vazio sanitario e o calendario de semeadura da regiao." },
+            { "tipo": "cultural", "descricao": "Preferir cultivares de ciclo precoce e com resistencia parcial." },
+            { "tipo": "quimico", "descricao": "Programa preventivo com misturas de triazol + estrobilurina + carboxamida, sempre alternando modos de acao. O fungo tem alto risco de desenvolver resistencia." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Trifloxistrobina + Protioconazol", "grupo": "Estrobilurina + Triazol", "acao": "sistemico" },
+            { "nome": "Azoxistrobina + Benzovindiflupir", "grupo": "Estrobilurina + Carboxamida", "acao": "sistemico" },
+            { "nome": "Mancozebe", "grupo": "Ditiocarbamato", "acao": "protetor (multissitio, anti-resistencia)" }
+          ]
+        },
+        {
+          "id": "soja_mofo_branco",
+          "nome": "Mofo branco",
+          "agente": "Sclerotinia sclerotiorum",
+          "tipo_agente": "fungo",
+          "gravidade": 4,
+          "descricao": "Ataca principalmente o caule e as hastes, formando um miceilio branco e cotonoso, dentro do qual se formam estruturas de resistencia pretas e duras (escrerocios). A planta murcha e morre. Os escrerocios sobrevivem anos no solo, tornando a area historicamente problematica.",
+          "sintomas": [
+            { "id": "lesoes_no_caule", "peso": 1.0 },
+            { "id": "murcha", "peso": 0.9 },
+            { "id": "po_branco_superficie", "peso": 0.5 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "15 a 24 C",
+            "umidade": "Muito alta, com dossel fechado e solo umido",
+            "observacao": "Regioes de altitude e alta densidade de plantio. Dossel fechado que nao permite a entrada de luz e ventilacao no solo e o fator determinante."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Reduzir a densidade de semeadura para abrir o dossel." },
+            { "tipo": "cultural", "descricao": "Rotacao com gramineas (milho, braquiaria), que nao sao hospedeiras." },
+            { "tipo": "cultural", "descricao": "Usar sementes livres de escrerocios e limpar maquinas ao trocar de talhao." },
+            { "tipo": "biologico", "descricao": "Trichoderma harzianum aplicado no solo parasita os escrerocios e e uma das medidas mais eficazes a longo prazo." },
+            { "tipo": "quimico", "descricao": "Fungicidas especificos aplicados no inicio do florescimento, antes do fechamento do dossel." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Fluazinam", "grupo": "Fenilpiridinilamina", "acao": "protetor" },
+            { "nome": "Procimidona", "grupo": "Dicarboximida", "acao": "protetor" },
+            { "nome": "Trichoderma harzianum", "grupo": "Biologico", "acao": "controle biologico de solo" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "milho",
+      "nome": "Milho",
+      "nome_cientifico": "Zea mays",
+      "emoji": "🌽",
+      "doencas": [
+        {
+          "id": "milho_cercosporiose",
+          "nome": "Cercosporiose (Mancha-de-cercospora)",
+          "agente": "Cercospora zeae-maydis",
+          "tipo_agente": "fungo",
+          "gravidade": 4,
+          "descricao": "Lesoes retangulares e alongadas, limitadas pelas nervuras, inicialmente cinzentas e depois marrons. Progride das folhas baixeiras para as superiores e, quando atinge a folha bandeira antes do enchimento de graos, causa perdas severas.",
+          "sintomas": [
+            { "id": "manchas_pequenas_centro_claro", "peso": 0.7 },
+            { "id": "manchas_amareladas", "peso": 0.5 },
+            { "id": "desfolha_baixo_para_cima", "peso": 0.7 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "22 a 30 C",
+            "umidade": "Alta, com orvalho prolongado",
+            "observacao": "Muito favorecida por plantio direto com restos culturais de milho na superficie e por monocultura sucessiva de milho."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Rotacao de culturas com especies nao hospedeiras." },
+            { "tipo": "cultural", "descricao": "Uso de hibridos com resistencia - principal ferramenta de manejo." },
+            { "tipo": "quimico", "descricao": "Fungicida no estadio V8-VT quando houver historico da doenca na area." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Azoxistrobina + Ciproconazol", "grupo": "Estrobilurina + Triazol", "acao": "sistemico" },
+            { "nome": "Piraclostrobina + Epoxiconazol", "grupo": "Estrobilurina + Triazol", "acao": "sistemico" }
+          ]
+        },
+        {
+          "id": "milho_ferrugem_comum",
+          "nome": "Ferrugem comum",
+          "agente": "Puccinia sorghi",
+          "tipo_agente": "fungo",
+          "gravidade": 3,
+          "descricao": "Forma pustulas alongadas de cor marrom-canela em ambas as faces da folha, que rompem a epiderme e liberam esporos. Em geral menos destrutiva que a ferrugem polissora, mas pode causar perdas relevantes em hibridos suscetiveis.",
+          "sintomas": [
+            { "id": "pustulas_ferruginosas", "peso": 1.0 },
+            { "id": "manchas_amareladas", "peso": 0.4 }
+          ],
+          "condicoes_favoraveis": {
+            "temperatura": "16 a 23 C",
+            "umidade": "Alta, com orvalho frequente",
+            "observacao": "Favorecida por temperaturas amenas. Comum em plantios de inverno (safrinha) e em regioes de maior altitude."
+          },
+          "tratamentos": [
+            { "tipo": "cultural", "descricao": "Escolha de hibridos resistentes e ajuste da epoca de semeadura." },
+            { "tipo": "quimico", "descricao": "Fungicida sistemico ao primeiro aparecimento das pustulas em area de historico." }
+          ],
+          "ingredientes_ativos": [
+            { "nome": "Tebuconazol", "grupo": "Triazol", "acao": "sistemico" },
+            { "nome": "Azoxistrobina + Ciproconazol", "grupo": "Estrobilurina + Triazol", "acao": "sistemico" }
+          ]
+        }
+      ]
+    }
+  ]
+}

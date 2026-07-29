@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Sistema de design "ferramenta de campo"
+
+   O contexto de uso dita cada escolha: sol a pino, mao suja,
+   talvez luva, pressa. Por isso:
+     - fundo branco puro (maximo brilho reflexivo sob sol)
+     - contraste muito acima do minimo AAA
+     - bordas solidas em vez de sombras (sombra some na luz)
+     - alvos de toque acima do guideline por causa de luva
+   ============================================================ */
+
+@theme {
+  /* --- superficies e texto --- */
+  --color-fundo: #ffffff;
+  --color-superficie: #f5f5f4;
+  --color-borda: #d6d3d1;
+  --color-borda-forte: #a8a29e;
+  --color-texto: #1c1917; /* 17.9:1 sobre o fundo */
+  --color-texto-suave: #57534e; /* 7.5:1 — ainda AAA */
+
+  /* --- identidade --- */
+  --color-primaria: #15803d; /* branco em cima da 5.1:1 */
+  --color-primaria-escura: #166534; /* estado pressionado */
+  --color-primaria-clara: #dcfce7; /* preenchimento sutil */
+
+  /* --- escala de gravidade ---
+     Nunca usada sozinha: sempre acompanha rotulo textual e barra
+     preenchida, para continuar legivel por quem nao distingue as cores. */
+  --color-grav-1: #65a30d;
+  --color-grav-2: #ca8a04;
+  --color-grav-3: #ea580c;
+  --color-grav-4: #dc2626;
+  --color-grav-5: #991b1b;
+
+  /* --- estados --- */
+  --color-alerta: #b45309;
+  --color-alerta-fundo: #fffbeb;
+  --color-offline: #57534e;
+
+  /* --- tipografia ---
+     18px de corpo, acima do padrao web de 16px. */
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.6;
+
+  /* --- alvo de toque ---
+     56px, acima dos 44px do guideline, por causa de luva. */
+  --spacing-toque: 3.5rem;
+  --spacing-toque-grande: 4.5rem;
+}
+
+/* Tema claro fixo. Um app de campo nao herda o modo escuro do sistema:
+   sob sol direto, fundo escuro fica ilegivel. */
+html {
+  background-color: var(--color-fundo);
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-fundo);
+  color: var(--color-texto);
+  font-family: var(--font-sans);
+  /* Evita o zoom por duplo toque atrapalhar quem usa luva. */
+  touch-action: manipulation;
+}
+
+/* Foco sempre visivel e grosso — no sol, um anel fino desaparece. */
+:focus-visible {
+  outline: 3px solid var(--color-primaria);
+  outline-offset: 2px;
+}
+
+/* Respeita quem pediu menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

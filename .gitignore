@@ -1,0 +1,40 @@
+# === Python ===
+# O banco e um artefato gerado a partir de data/base_conhecimento.json.
+# A fonte da verdade e o JSON, que fica versionado.
+data/*.db
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# === Node / Next.js ===
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# === Segredos ===
+# ANTHROPIC_API_KEY mora aqui em desenvolvimento e nas variaveis de
+# ambiente da Vercel em producao. Nunca no repositorio.
+.env
+.env.*
+!.env.example
+
+# === Deploy ===
+.vercel/
+
+# === Modelos (fase 4 em diante) ===
+# Pesos sao grandes e reprodutiveis pelo notebook de treino.
+# O ONNX final entra por Git LFS ou pelo pipeline de build, nao aqui.
+*.pt
+*.onnx
+datasets/
+runs/
+
+# === Editores / SO ===
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
