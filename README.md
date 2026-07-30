@@ -7,9 +7,11 @@ condições climáticas que favorecem o aparecimento.
 **▶ [agroscan-blond.vercel.app](https://agroscan-blond.vercel.app)** - instalável
 no celular e funcional em modo avião.
 
-> **Status:** fases 1 a 3 concluídas - o agrônomo já diagnostica de verdade,
-> marcando sintomas, sem foto nenhuma e sem rede. Base de 29 doenças, motor
-> em Python e TypeScript verificados um contra o outro.
+> **Status:** fases 1 a 3 concluídas e a 4 em andamento. O agrônomo já
+> diagnostica de verdade, marcando sintomas, sem foto nenhuma e sem rede. Base
+> de 29 doenças, motor em Python e TypeScript verificados um contra o outro, e
+> as 38 saídas do futuro modelo já mapeadas, mascaradas por cultura e testadas
+> - antes de existir modelo.
 
 ---
 
@@ -58,7 +60,9 @@ Daí as três camadas de resposta:
 classe (`Tomato___Early_blight`), mas o agrônomo *sabe* o que plantou. Ao
 selecionar a cultura, as classes das outras 13 são zeradas e o softmax é
 renormalizado - o modelo perde a chance de confundir pinta-preta de tomate com
-requeima de batata.
+requeima de batata. Já está implementado e testado em
+[`web/lib/modelo.ts`](web/lib/modelo.ts), sobre vetores sintéticos, antes de
+existir modelo.
 
 **Recusa antes de responder.** O app decide se a imagem pertence ao domínio
 treinado antes de arriscar um palpite. Sem isso, a camada 3 seria inútil:
@@ -103,15 +107,20 @@ Sem dependências externas - só a biblioteca padrão.
 python -m app.db          # valida o JSON e gera data/agroscan.db
 python -m app.cli         # diagnóstico interativo no terminal
 python -m app.fixtures    # regera as fixtures compartilhadas com o TS
+python -m app.modelo      # regera o contrato das 38 classes do modelo
 python -m unittest discover -s tests -t .
 ```
 
 ### Depois de mexer na base de conhecimento
 
 ```bash
-python -m app.db && python -m app.fixtures    # revalida e regera as fixtures
-cd web && npm run base && npm test            # regera o módulo e confere
+python -m app.db && python -m app.fixtures && python -m app.modelo
+cd web && npm run base && npm test
 ```
+
+São cinco artefatos gerados e versionados - as fixtures, o contrato do modelo,
+os dois módulos TypeScript e o banco. Todos têm teste de frescor, e o CI roda
+exatamente esta sequência: nenhum deles pode envelhecer em silêncio.
 
 ---
 
@@ -224,6 +233,18 @@ isso na cara: *"o modelo de imagem não cobre esta doença"*.
 Mirtilo e framboesa ficam de fora do fluxo por sintomas: o dataset só as
 conhece como saudáveis, e oferecê-las seria um beco sem saída.
 
+**As 12 classes saudáveis também são dado**, na chave `saudaveis`, fora de
+`culturas[].doencas`. Planta saudável não tem perfil de sintomas, e colocá-la
+entre as doenças a faria aparecer como hipótese no fluxo por sintomas. Elas
+existem só para o modelo ter para onde apontar quando não reconhece doença
+nenhuma.
+
+Laranja e abóbora **não têm** classe saudável - o PlantVillage só traz citros
+com greening e abóbora com oídio. Isso está declarado em
+`culturas_sem_classe_saudavel`, com motivo, porque uma ausência silenciosa
+pareceria esquecimento de curadoria. Na prática: o modelo nunca consegue
+responder "sem doença" para essas duas.
+
 O catálogo tem 47 sintomas, agrupados pela parte da planta e filtrados por
 cultura - cada cultura usa entre 2 e 20 deles. Mostrar os 47 numa tela de
 celular sob sol seria um formulário ilegível.
@@ -233,6 +254,75 @@ genuinamente confundíveis no campo, a base não força uma separação artifici
 pinta-preta e mancha-alvo do tomate empatam nos anéis concêntricos porque as
 duas realmente os fazem, e a descrição da mancha-alvo diz onde olhar para
 separar as duas. Fingir certeza aqui seria pior que a dúvida.
+
+---
+
+## O contrato das 38 classes
+
+O modelo devolve um vetor de 38 números. Sozinho ele não diz nada: é preciso
+saber que o índice 29 é `Tomato___Early_blight` e que essa classe abre a ficha
+`tomate_pinta_preta`. Esse mapeamento é derivado da base curada por
+`python -m app.modelo` e gravado em `data/contrato_modelo.json`.
+
+Ele existe **antes** do modelo, de propósito. Se a ordem usada no treino
+divergir dela em uma posição, a falha é silenciosa e plausível: uma foto de
+tomate vira `Leaf_Mold` em vez de `Late_blight`. Continua sendo doença de
+tomate, a tela continua correta, e o agrônomo recebe o manejo errado. Nenhum
+teste de interface pega isso. Então a ordem é decidida aqui, e o notebook de
+treino passa a conferir contra ela em vez de decidir por conta.
+
+### A ordem é `sorted()`, e isso tem armadilhas
+
+É o que o `ImageFolder` do torchvision produz ao varrer os diretórios do
+dataset: ordenação por **ponto de código**, não alfabética. Duas consequências
+que parecem erro de digitação e não são:
+
+```
+35 Tomato___Tomato_Yellow_Leaf_Curl_Virus
+36 Tomato___Tomato_mosaic_virus     ← depois, porque 'Y' (89) < 'm' (109)
+37 Tomato___healthy                 ← sempre no fim do bloco da cultura
+```
+
+E os rótulos carregam os defeitos do dataset original, que precisam sobreviver
+intactos: `Corn_(maize)___Common_rust_` termina em sublinhado, duas classes têm
+**espaço** no meio, `Pepper,_bell` tem vírgula, e `Haunglongbing` está escrito
+errado - mantemos o erro, porque é o nome do diretório.
+
+Cuidado relacionado: **o `id` da cultura não é o prefixo da classe** em três dos
+catorze casos. `Cherry` é `Cherry_(including_sour)`, `Corn` é `Corn_(maize)` e
+`Pepper` é `Pepper,_bell`. Concatenar o id funcionaria por acidente nos outros
+onze. Por isso cada cultura carrega `prefixo_modelo` explícito, e a validação
+exige que toda `classe_modelo` comece pelo prefixo da cultura que a hospeda.
+
+### Quatro camadas contra uma ordem errada
+
+| # | Onde | O que pega |
+|---|---|---|
+| 1 | `tests/test_modelo.py` | as 38 strings estão **escritas à mão** no teste e comparadas com a lista gerada. Quebra o círculo de gerador e verificação serem a mesma coisa: um `sorted(key=str.lower)` acidental derruba o build |
+| 2 | notebook, antes de treinar | `assert dataset.classes == contrato` - pega espelho do PlantVillage que "conserta" o sublinhado final |
+| 3 | volta do Colab | `metricas.json` carrega `classes_do_treino`; teste afirma igualdade |
+| 4 | no navegador | lista embutida no ONNX; o carregador recusa rodar se não bater. É a única que pega service worker servindo modelo antigo com bundle novo |
+
+A camada 1 já existe. As outras três estão especificadas em
+`contrato_de_treino`, dentro do próprio contrato, para o notebook não as
+inventar.
+
+### O que já funciona sem modelo
+
+`web/lib/modelo.ts` recebe um vetor de 38 probabilidades e devolve a resposta
+mascarada pela cultura, com a ficha a abrir. Está testado sobre vetores
+sintéticos: um pico em `Potato___Late_blight` mascarado por tomate desaparece;
+uma cultura sem massa nenhuma devolve `null` em vez de espalhar `NaN` pela
+tela; laranja e abóbora não têm classe saudável e o código não assume que têm.
+
+Quando o modelo chegar, a fase 5 liga o ONNX na entrada disso.
+
+> **Uma armadilha registrada para a fase 5:** a máscara **destrói** a confiança
+> como sinal de fora-da-distribuição. Renormalizar sobre as dez classes de
+> tomate faz qualquer imagem - inclusive uma mangueira - sair com confiança
+> alta. A recusa tem que ser calculada sobre os logits crus, antes da máscara.
+> É por isso que o contrato exige que o modelo exporte **logits, nunca
+> softmax**.
 
 ---
 
@@ -261,7 +351,8 @@ rótulo textual, para continuar legível por quem não distingue as cores.
 | 1 | Base de conhecimento + motor de sintomas + CLI | ✅ |
 | 2 | PWA instalável, sistema de design, telas navegáveis | ✅ |
 | 3 | Base de 29 doenças, motor portado para TS, tela de sintomas | ✅ |
-| 4 | Modelo em Colab + validação honesta em campo | ⬜ |
+| 4a | Contrato das 38 classes, máscara por cultura, laudo saudável | ✅ |
+| 4b | Modelo em Colab + validação honesta em campo | ⬜ |
 | 5 | Câmera e inferência local com máscara e recusa | ⬜ |
 | 6 | Escalonamento para qualquer planta | ⬜ |
 | 7 | Caderno de campo (IndexedDB, GPS, exportação) | ⬜ |
@@ -294,12 +385,15 @@ ser conferido no **AGROFIT/MAPA**.
 
 ```
 data/base_conhecimento.json         fonte da verdade - conteúdo agronômico curado
+data/contrato_modelo.json           gerado - índice do modelo → classe → ficha
 app/                                Python: motor de referência + tooling de dados
   db.py                             schema, validação e carga no SQLite
   diagnostico.py                    motor de referência
   fixtures.py                       gera o contrato compartilhado com o TS
+  modelo.py                         deriva a ordem canônica das 38 classes
 tests/
   test_diagnostico.py               testes do motor de referência
+  test_modelo.py                    as 38 classes escritas à mão + validações
   fixtures/                         entrada + saída esperada, versionadas
 web/                                Next.js 16 · TypeScript · Tailwind 4 · PWA
   app/                              rotas (App Router)
@@ -307,8 +401,11 @@ web/                                Next.js 16 · TypeScript · Tailwind 4 · PW
   lib/
     diagnostico.ts                  porte do motor - roda no navegador
     diagnostico.test.ts             paridade com o Python, via fixtures
+    modelo.ts                       máscara por cultura sobre a saída do modelo
+    modelo.test.ts                  testado com vetores sintéticos
     base-conhecimento.ts            gerado do JSON por `npm run base`
+    contrato-modelo.ts              gerado - a ordem é copiada, nunca recalculada
   public/sw.js                      service worker escrito à mão
-  scripts/gerar-base.mjs            JSON curado → módulo TS embutido no bundle
+  scripts/gerar-base.mjs            JSON curados → módulos TS embutidos no bundle
   scripts/gerar-icones.mjs          ícones do PWA reprodutíveis por código
 ```

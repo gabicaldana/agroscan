@@ -8,7 +8,7 @@ NOTA DE PROJETO
 A pontuacao aqui NAO e uma probabilidade. E um indice de compatibilidade
 (variante ponderada do indice de Tversky). Chamar isso de "confianca de 92%"
 seria desonesto: o sistema nao tem modelo probabilistico por tras. Quando o
-modelo de imagem entrar (fase 4), ele vai produzir uma confianca de verdade,
+modelo de imagem entrar no app (fase 5), ele vai produzir uma confianca real,
 e as duas coisas vao conviver como sinais distintos.
 
 Este arquivo e a referencia. O app roda o porte em TypeScript
@@ -118,7 +118,11 @@ def listar_culturas(apenas_com_doencas: bool = False) -> list[dict]:
     seria um beco sem saida.
     """
     con = conectar()
-    sql = """SELECT c.*, COUNT(d.id) AS n_doencas
+    # Colunas explicitas, e nao `c.*`: `prefixo_modelo` e contrato do modelo
+    # de imagem, nao dado do fluxo por sintomas, e nao tem por que atravessar
+    # ate o seletor de cultura.
+    sql = """SELECT c.id, c.nome, c.nome_cientifico, c.emoji,
+                    COUNT(d.id) AS n_doencas
                FROM cultura c LEFT JOIN doenca d ON d.cultura_id = c.id
               GROUP BY c.id"""
     if apenas_com_doencas:

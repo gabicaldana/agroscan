@@ -3,11 +3,11 @@
  * data/base_conhecimento.json. Nao editar a mao: a proxima geracao
  * sobrescreve.
  *
- * Os ids das culturas sao os prefixos das classes do PlantVillage
- * (`Tomato`, `Corn`), porque e por eles que a mascara por cultura vai
- * zerar as saidas irrelevantes do modelo na fase 5. `classeModelo` liga
- * cada doenca a sua classe; `null` significa que o modelo nao sabe
- * reconhece-la e so o fluxo por sintomas chega ate ela.
+ * O `id` da cultura e o nome curto usado no app. Ele NAO e necessariamente
+ * o prefixo da classe no PlantVillage - `prefixoModelo` e quem carrega isso,
+ * e os dois diferem em Cherry_(including_sour), Corn_(maize) e Pepper,_bell.
+ * Quem precisa casar cultura com saida do modelo usa contrato-modelo.ts, que
+ * ja traz os indices resolvidos.
  */
 
 export type OrgaoId = "folha" | "caule" | "fruto" | "planta";
@@ -54,11 +54,24 @@ export type Doenca = {
 
 export type Cultura = {
   id: string;
+  /** Prefixo desta cultura nas classes do PlantVillage. Difere do id em tres. */
+  prefixoModelo: string;
   nome: string;
   nomeCientifico: string;
   emoji: string;
   doencas: Doenca[];
 };
+
+/** Uma das 12 classes "healthy" do dataset. Nao e doenca e nao tem sintomas:
+ *  so existe para o modelo ter para onde apontar quando nao reconhece nada. */
+export type ClasseSaudavel = {
+  culturaId: string;
+  classeModelo: string;
+  /** So presente quando ha algo especifico daquela cultura a dizer. */
+  observacao?: string;
+};
+
+export type CulturaSemClasseSaudavel = { culturaId: string; motivo: string };
 
 export const ORGAOS: readonly Orgao[] = [
   {
@@ -324,6 +337,7 @@ export const SINTOMAS: readonly Sintoma[] = [
 export const CULTURAS: readonly Cultura[] = [
   {
     "id": "Apple",
+    "prefixoModelo": "Apple",
     "nome": "Maçã",
     "nomeCientifico": "Malus domestica",
     "emoji": "🍎",
@@ -546,6 +560,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Blueberry",
+    "prefixoModelo": "Blueberry",
     "nome": "Mirtilo",
     "nomeCientifico": "Vaccinium spp.",
     "emoji": "🫐",
@@ -553,6 +568,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Cherry",
+    "prefixoModelo": "Cherry_(including_sour)",
     "nome": "Cereja",
     "nomeCientifico": "Prunus avium",
     "emoji": "🍒",
@@ -628,6 +644,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Corn",
+    "prefixoModelo": "Corn_(maize)",
     "nome": "Milho",
     "nomeCientifico": "Zea mays",
     "emoji": "🌽",
@@ -795,6 +812,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Grape",
+    "prefixoModelo": "Grape",
     "nome": "Uva",
     "nomeCientifico": "Vitis vinifera",
     "emoji": "🍇",
@@ -1004,6 +1022,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Orange",
+    "prefixoModelo": "Orange",
     "nome": "Laranja",
     "nomeCientifico": "Citrus sinensis",
     "emoji": "🍊",
@@ -1095,6 +1114,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Peach",
+    "prefixoModelo": "Peach",
     "nome": "Pêssego",
     "nomeCientifico": "Prunus persica",
     "emoji": "🍑",
@@ -1174,6 +1194,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Pepper",
+    "prefixoModelo": "Pepper,_bell",
     "nome": "Pimentão",
     "nomeCientifico": "Capsicum annuum",
     "emoji": "🫑",
@@ -1257,6 +1278,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Potato",
+    "prefixoModelo": "Potato",
     "nome": "Batata",
     "nomeCientifico": "Solanum tuberosum",
     "emoji": "🥔",
@@ -1409,6 +1431,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Raspberry",
+    "prefixoModelo": "Raspberry",
     "nome": "Framboesa",
     "nomeCientifico": "Rubus idaeus",
     "emoji": "🍇",
@@ -1416,6 +1439,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Soybean",
+    "prefixoModelo": "Soybean",
     "nome": "Soja",
     "nomeCientifico": "Glycine max",
     "emoji": "🌱",
@@ -1550,6 +1574,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Squash",
+    "prefixoModelo": "Squash",
     "nome": "Abóbora",
     "nomeCientifico": "Cucurbita spp.",
     "emoji": "🎃",
@@ -1625,6 +1650,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Strawberry",
+    "prefixoModelo": "Strawberry",
     "nome": "Morango",
     "nomeCientifico": "Fragaria × ananassa",
     "emoji": "🍓",
@@ -1700,6 +1726,7 @@ export const CULTURAS: readonly Cultura[] = [
   },
   {
     "id": "Tomato",
+    "prefixoModelo": "Tomato",
     "nome": "Tomate",
     "nomeCientifico": "Solanum lycopersicum",
     "emoji": "🍅",
@@ -2403,5 +2430,71 @@ export const CULTURAS: readonly Cultura[] = [
         ]
       }
     ]
+  }
+];
+
+export const SAUDAVEIS: readonly ClasseSaudavel[] = [
+  {
+    "culturaId": "Apple",
+    "classeModelo": "Apple___healthy"
+  },
+  {
+    "culturaId": "Blueberry",
+    "classeModelo": "Blueberry___healthy",
+    "observacao": "O PlantVillage traz o mirtilo apenas como saudável. Nenhuma doença desta cultura foi treinada, e por isso ela nem aparece no fluxo por sintomas."
+  },
+  {
+    "culturaId": "Cherry",
+    "classeModelo": "Cherry_(including_sour)___healthy"
+  },
+  {
+    "culturaId": "Corn",
+    "classeModelo": "Corn_(maize)___healthy"
+  },
+  {
+    "culturaId": "Grape",
+    "classeModelo": "Grape___healthy"
+  },
+  {
+    "culturaId": "Peach",
+    "classeModelo": "Peach___healthy"
+  },
+  {
+    "culturaId": "Pepper",
+    "classeModelo": "Pepper,_bell___healthy"
+  },
+  {
+    "culturaId": "Potato",
+    "classeModelo": "Potato___healthy"
+  },
+  {
+    "culturaId": "Raspberry",
+    "classeModelo": "Raspberry___healthy",
+    "observacao": "O PlantVillage traz a framboesa apenas como saudável. Nenhuma doença desta cultura foi treinada, e por isso ela nem aparece no fluxo por sintomas."
+  },
+  {
+    "culturaId": "Soybean",
+    "classeModelo": "Soybean___healthy",
+    "observacao": "O dataset não traz doença nenhuma de soja. Ferrugem asiática e mofo branco, as duas principais no Brasil, vão cair nesta classe com confiança alta - é o ponto cego mais perigoso do modelo, e o motivo de a soja continuar no fluxo por sintomas."
+  },
+  {
+    "culturaId": "Strawberry",
+    "classeModelo": "Strawberry___healthy"
+  },
+  {
+    "culturaId": "Tomato",
+    "classeModelo": "Tomato___healthy",
+    "observacao": "O modelo cobre 9 das 10 doenças de tomate desta base. O oídio do tomateiro não tem classe no dataset e cairia aqui."
+  }
+];
+
+export const CULTURAS_SEM_CLASSE_SAUDAVEL: readonly CulturaSemClasseSaudavel[] = [
+  {
+    "culturaId": "Orange",
+    "motivo": "O PlantVillage traz laranja só com greening. Não existe classe de laranja saudável, então o modelo nunca responde 'sem doença' para citros."
+  },
+  {
+    "culturaId": "Squash",
+    "motivo": "O PlantVillage traz abóbora só com oídio. Não existe classe de abóbora saudável, então o modelo nunca responde 'sem doença' para abóbora."
   }
 ];

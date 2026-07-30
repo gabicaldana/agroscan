@@ -18,7 +18,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { paraCamel, gerarFonte, CAMINHO_SAIDA } from "../scripts/gerar-base.mjs";
+import {
+  paraCamel,
+  gerarFonteBase,
+  gerarFonteContrato,
+  CAMINHO_SAIDA_BASE,
+  CAMINHO_SAIDA_CONTRATO,
+} from "../scripts/gerar-base.mjs";
 import {
   chaveAlfabetica,
   detalharDoenca,
@@ -103,12 +109,21 @@ describe("paridade com o motor de referencia em Python", () => {
   }
 });
 
-describe("base gerada", () => {
+describe("modulos gerados", () => {
   test("lib/base-conhecimento.ts esta atualizado com o JSON curado", () => {
     assert.equal(
-      readFileSync(CAMINHO_SAIDA, "utf8"),
-      gerarFonte(),
+      readFileSync(CAMINHO_SAIDA_BASE, "utf8"),
+      gerarFonteBase(),
       "A base curada mudou e o modulo gerado nao. Rode `npm run base`.",
+    );
+  });
+
+  test("lib/contrato-modelo.ts esta atualizado com o contrato", () => {
+    assert.equal(
+      readFileSync(CAMINHO_SAIDA_CONTRATO, "utf8"),
+      gerarFonteContrato(),
+      "O contrato mudou e o modulo gerado nao. Rode `python -m app.modelo` " +
+        "e `npm run base`.",
     );
   });
 });

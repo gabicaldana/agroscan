@@ -1,5 +1,5 @@
 {
-  "_comentario": "Base de conhecimento curada manualmente. Fontes de referencia: Embrapa, Manual de Fitopatologia (Amorim et al.), Compendia da APS, AGROFIT/MAPA. Esta e a FONTE DA VERDADE do projeto - o modelo de imagem (fase 4) apenas aponta qual doenca, todo o conteudo abaixo vem daqui. O campo classe_modelo liga cada doenca a classe correspondente do PlantVillage; null significa que o modelo nao sabe reconhece-la, e so o fluxo por sintomas a alcanca.",
+  "_comentario": "Base de conhecimento curada manualmente. Fontes de referencia: Embrapa, Manual de Fitopatologia (Amorim et al.), Compendia da APS, AGROFIT/MAPA. Esta e a FONTE DA VERDADE do projeto - o modelo de imagem apenas aponta qual doenca, todo o conteudo abaixo vem daqui. O campo classe_modelo liga cada doenca a classe correspondente do PlantVillage; null significa que o modelo nao sabe reconhece-la, e so o fluxo por sintomas a alcanca.",
 
   "orgaos": [
     { "id": "folha", "rotulo": "Na folha", "ordem": 1 },
@@ -61,9 +61,54 @@
     { "id": "amarelecimento_setorizado", "nome": "Amarelecimento concentrado num ramo ou setor da planta", "orgao": "planta" }
   ],
 
+  "_comentario_saudaveis": "As 12 classes 'healthy' do PlantVillage. Ficam FORA de culturas[].doencas de proposito: uma planta saudavel nao tem perfil de sintomas, e coloca-la la a faria aparecer como hipotese no fluxo por sintomas. Aqui elas existem so para o modelo de imagem ter para onde apontar quando nao reconhece doenca nenhuma. `observacao` so aparece quando ha algo especifico daquela cultura que o agronomo precisa saber - o texto generico de 'saudavel nao quer dizer sem problema' e da interface, nao do dado.",
+
+  "saudaveis": [
+    { "cultura_id": "Apple", "classe_modelo": "Apple___healthy" },
+    {
+      "cultura_id": "Blueberry",
+      "classe_modelo": "Blueberry___healthy",
+      "observacao": "O PlantVillage traz o mirtilo apenas como saudável. Nenhuma doença desta cultura foi treinada, e por isso ela nem aparece no fluxo por sintomas."
+    },
+    { "cultura_id": "Cherry", "classe_modelo": "Cherry_(including_sour)___healthy" },
+    { "cultura_id": "Corn", "classe_modelo": "Corn_(maize)___healthy" },
+    { "cultura_id": "Grape", "classe_modelo": "Grape___healthy" },
+    { "cultura_id": "Peach", "classe_modelo": "Peach___healthy" },
+    { "cultura_id": "Pepper", "classe_modelo": "Pepper,_bell___healthy" },
+    { "cultura_id": "Potato", "classe_modelo": "Potato___healthy" },
+    {
+      "cultura_id": "Raspberry",
+      "classe_modelo": "Raspberry___healthy",
+      "observacao": "O PlantVillage traz a framboesa apenas como saudável. Nenhuma doença desta cultura foi treinada, e por isso ela nem aparece no fluxo por sintomas."
+    },
+    {
+      "cultura_id": "Soybean",
+      "classe_modelo": "Soybean___healthy",
+      "observacao": "O dataset não traz doença nenhuma de soja. Ferrugem asiática e mofo branco, as duas principais no Brasil, vão cair nesta classe com confiança alta - é o ponto cego mais perigoso do modelo, e o motivo de a soja continuar no fluxo por sintomas."
+    },
+    { "cultura_id": "Strawberry", "classe_modelo": "Strawberry___healthy" },
+    {
+      "cultura_id": "Tomato",
+      "classe_modelo": "Tomato___healthy",
+      "observacao": "O modelo cobre 9 das 10 doenças de tomate desta base. O oídio do tomateiro não tem classe no dataset e cairia aqui."
+    }
+  ],
+
+  "culturas_sem_classe_saudavel": [
+    {
+      "cultura_id": "Orange",
+      "motivo": "O PlantVillage traz laranja só com greening. Não existe classe de laranja saudável, então o modelo nunca responde 'sem doença' para citros."
+    },
+    {
+      "cultura_id": "Squash",
+      "motivo": "O PlantVillage traz abóbora só com oídio. Não existe classe de abóbora saudável, então o modelo nunca responde 'sem doença' para abóbora."
+    }
+  ],
+
   "culturas": [
     {
       "id": "Apple",
+      "prefixo_modelo": "Apple",
       "nome": "Maçã",
       "nome_cientifico": "Malus domestica",
       "emoji": "🍎",
@@ -169,6 +214,7 @@
 
     {
       "id": "Blueberry",
+      "prefixo_modelo": "Blueberry",
       "nome": "Mirtilo",
       "nome_cientifico": "Vaccinium spp.",
       "emoji": "🫐",
@@ -177,6 +223,7 @@
 
     {
       "id": "Cherry",
+      "prefixo_modelo": "Cherry_(including_sour)",
       "nome": "Cereja",
       "nome_cientifico": "Prunus avium",
       "emoji": "🍒",
@@ -217,6 +264,7 @@
 
     {
       "id": "Corn",
+      "prefixo_modelo": "Corn_(maize)",
       "nome": "Milho",
       "nome_cientifico": "Zea mays",
       "emoji": "🌽",
@@ -309,6 +357,7 @@
 
     {
       "id": "Grape",
+      "prefixo_modelo": "Grape",
       "nome": "Uva",
       "nome_cientifico": "Vitis vinifera",
       "emoji": "🍇",
@@ -411,6 +460,7 @@
 
     {
       "id": "Orange",
+      "prefixo_modelo": "Orange",
       "nome": "Laranja",
       "nome_cientifico": "Citrus sinensis",
       "emoji": "🍊",
@@ -455,6 +505,7 @@
 
     {
       "id": "Peach",
+      "prefixo_modelo": "Peach",
       "nome": "Pêssego",
       "nome_cientifico": "Prunus persica",
       "emoji": "🍑",
@@ -496,6 +547,7 @@
 
     {
       "id": "Pepper",
+      "prefixo_modelo": "Pepper,_bell",
       "nome": "Pimentão",
       "nome_cientifico": "Capsicum annuum",
       "emoji": "🫑",
@@ -538,6 +590,7 @@
 
     {
       "id": "Potato",
+      "prefixo_modelo": "Potato",
       "nome": "Batata",
       "nome_cientifico": "Solanum tuberosum",
       "emoji": "🥔",
@@ -611,6 +664,7 @@
 
     {
       "id": "Raspberry",
+      "prefixo_modelo": "Raspberry",
       "nome": "Framboesa",
       "nome_cientifico": "Rubus idaeus",
       "emoji": "🍇",
@@ -619,6 +673,7 @@
 
     {
       "id": "Soybean",
+      "prefixo_modelo": "Soybean",
       "nome": "Soja",
       "nome_cientifico": "Glycine max",
       "emoji": "🌱",
@@ -688,6 +743,7 @@
 
     {
       "id": "Squash",
+      "prefixo_modelo": "Squash",
       "nome": "Abóbora",
       "nome_cientifico": "Cucurbita spp.",
       "emoji": "🎃",
@@ -728,6 +784,7 @@
 
     {
       "id": "Strawberry",
+      "prefixo_modelo": "Strawberry",
       "nome": "Morango",
       "nome_cientifico": "Fragaria × ananassa",
       "emoji": "🍓",
@@ -768,6 +825,7 @@
 
     {
       "id": "Tomato",
+      "prefixo_modelo": "Tomato",
       "nome": "Tomate",
       "nome_cientifico": "Solanum lycopersicum",
       "emoji": "🍅",

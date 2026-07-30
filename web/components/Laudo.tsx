@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AvisoLegal } from "@/components/AvisoLegal";
 import { BarraCompatibilidade } from "@/components/BarraCompatibilidade";
@@ -7,6 +8,8 @@ import { BarraGravidade } from "@/components/BarraGravidade";
 import { BotaoLink } from "@/components/Botao";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { detalharDoenca, type Ficha } from "@/lib/diagnostico.ts";
+import { classeSaudavelDe, doencasForaDoModelo } from "@/lib/modelo.ts";
+import { CULTURAS } from "@/lib/base-conhecimento.ts";
 
 const ROTULO_TRATAMENTO: Record<string, string> = {
   cultural: "Manejo cultural",
@@ -29,6 +32,18 @@ export function Laudo() {
   const params = useSearchParams();
   const doencaId = params.get("doenca");
   const compatibilidade = Number(params.get("compatibilidade"));
+
+  // `?saudavel=<cultura>` e a resposta do modelo quando ele nao reconhece
+  // doenca nenhuma. Nao e uma ficha: nao ha agente, gravidade nem manejo.
+  const culturaSaudavel = params.get("saudavel");
+  if (culturaSaudavel) {
+    return (
+      <LaudoSaudavel
+        culturaId={culturaSaudavel}
+        confianca={Number(params.get("confianca"))}
+      />
+    );
+  }
 
   let ficha: Ficha;
   try {
@@ -161,6 +176,149 @@ export function Laudo() {
         <BotaoLink href="/sintomas" variante="secundario">
           Voltar aos sintomas
         </BotaoLink>
+      </div>
+    </>
+  );
+}
+
+/**
+ * A resposta quando o modelo não reconhece doença nenhuma.
+ *
+ * O título é "Nenhuma doença reconhecida" e nunca "planta sadia". A diferença
+ * não é de estilo: o modelo só sabe dizer que a folha não se parece com as
+ * doenças que ele viu no treino, e isso não é o mesmo que a planta estar bem.
+ *
+ * O conteúdo é derivado da base, não escrito à mão - em especial a lista das
+ * doenças daquela cultura que o modelo não enxerga, que sai de
+ * `classeModelo === null` e se mantém sozinha quando a base mudar.
+ */
+function LaudoSaudavel({
+  culturaId,
+  confianca,
+}: {
+  culturaId: string;
+  confianca: number;
+}) {
+  const cultura = CULTURAS.find((c) => c.id === culturaId);
+
+  if (!cultura) {
+    return (
+      <EstadoVazio
+        titulo="Cultura desconhecida"
+        acao={
+          <BotaoLink href="/sintomas" variante="secundario">
+            Buscar por sintomas
+          </BotaoLink>
+        }
+      >
+        <p>Esta cultura não existe na base do AgroScan.</p>
+      </EstadoVazio>
+    );
+  }
+
+  // Laranja e abóbora não têm classe saudável no PlantVillage, então o modelo
+  // nunca consegue produzir esta resposta para elas. Chegar aqui significa que
+  // alguém montou a URL à mão ou que a fase 5 roteou errado - e afirmar "o
+  // modelo achou a folha saudável" seria inventar uma resposta que ele é
+  // incapaz de dar.
+  const saudavel = classeSaudavelDe(culturaId);
+  if (!saudavel) {
+    return (
+      <EstadoVazio
+        titulo={`O modelo nunca diz "sem doença" para ${cultura.nome.toLowerCase()}`}
+        acao={
+          <BotaoLink href="/sintomas" variante="secundario">
+            Buscar por sintomas
+          </BotaoLink>
+        }
+      >
+        <p>
+          O PlantVillage não tem classe de {cultura.nome.toLowerCase()}{" "}
+          saudável, só de planta doente. O modelo é incapaz de produzir esta
+          resposta, e por isso ela não deveria ter chegado até aqui.
+        </p>
+      </EstadoVazio>
+    );
+  }
+
+  const foraDoModelo = doencasForaDoModelo(culturaId);
+  const temConfianca = Number.isFinite(confianca) && confianca > 0;
+
+  return (
+    <>
+      <div className="flex items-start gap-3">
+        <span className="text-4xl" aria-hidden="true">
+          {cultura.emoji}
+        </span>
+        <div>
+          <h1 className="text-2xl leading-tight font-bold tracking-tight">
+            Nenhuma doença reconhecida
+          </h1>
+          <p className="text-texto-suave">
+            {cultura.nome} · <i>{cultura.nomeCientifico}</i>
+          </p>
+        </div>
+      </div>
+
+      <div className="border-borda mt-5 rounded-xl border-2 p-4">
+        <h2 className="text-sm font-bold tracking-wide uppercase">
+          O que o modelo afirmou
+        </h2>
+        <p className="mt-2">
+          Que esta folha se parece com as folhas de{" "}
+          {cultura.nome.toLowerCase()} saudáveis que ele viu no treino
+          {temConfianca && <> ({confianca}% de confiança)</>}.{" "}
+          <strong>Isso não é o mesmo que dizer que a planta está bem.</strong>
+        </p>
+      </div>
+
+      {foraDoModelo.length > 0 && (
+        <Secao titulo="Doenças desta cultura que o modelo não vê">
+          <p>
+            Estão na base do AgroScan, mas não têm classe no PlantVillage. Uma
+            planta com uma delas cai justamente nesta resposta, e com confiança
+            alta:
+          </p>
+          <ul className="mt-3 flex list-disc flex-col gap-2 pl-5">
+            {foraDoModelo.map((d) => (
+              <li key={d.id}>
+                <Link href={`/resultado?doenca=${d.id}`} className="underline">
+                  {d.nome}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {saudavel.observacao && <p className="mt-3">{saudavel.observacao}</p>}
+        </Secao>
+      )}
+
+      <Secao titulo="O que uma foto não mostra">
+        <ul className="flex list-disc flex-col gap-2 pl-5">
+          <li>Infecção já instalada que ainda não deu sintoma na folha.</li>
+          <li>Problema de raiz, colo ou vaso - nematoide, murcha vascular.</li>
+          <li>Deficiência nutricional e dano por defensivo.</li>
+          <li>Doença numa parte da planta que não foi fotografada.</li>
+        </ul>
+      </Secao>
+
+      <div className="border-borda bg-superficie mt-6 rounded-xl border-2 p-4">
+        <h2 className="font-bold">Ainda desconfia de alguma coisa?</h2>
+        <p className="mt-1 text-sm">
+          O fluxo por sintomas cobre {cultura.doencas.length}{" "}
+          {cultura.doencas.length === 1 ? "doença" : "doenças"} de{" "}
+          {cultura.nome.toLowerCase()}
+          {foraDoModelo.length > 0 && ", incluindo as que o modelo não reconhece"}
+          , e não depende de foto.
+        </p>
+        <div className="mt-4">
+          <BotaoLink href="/sintomas" variante="primario">
+            Marcar sintomas
+          </BotaoLink>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <AvisoLegal />
       </div>
     </>
   );

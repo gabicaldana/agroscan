@@ -8,5 +8,7 @@
 # Arquivo gerado que so o script deve tocar - marcado para nao poluir o diff.
 * text=auto eol=lf
 web/lib/base-conhecimento.ts linguist-generated=true
+web/lib/contrato-modelo.ts linguist-generated=true
+data/contrato_modelo.json linguist-generated=true
 tests/fixtures/casos_diagnostico.json linguist-generated=true
 *.png binary

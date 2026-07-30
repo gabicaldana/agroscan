@@ -27,13 +27,28 @@ DROP TABLE IF EXISTS ingrediente_ativo;
 DROP TABLE IF EXISTS doenca;
 DROP TABLE IF EXISTS sintoma;
 DROP TABLE IF EXISTS orgao;
+DROP TABLE IF EXISTS classe_saudavel;
 DROP TABLE IF EXISTS cultura;
 
 CREATE TABLE cultura (
     id              TEXT PRIMARY KEY,
     nome            TEXT NOT NULL,
     nome_cientifico TEXT NOT NULL,
-    emoji           TEXT NOT NULL
+    emoji           TEXT NOT NULL,
+    -- Prefixo da cultura nas classes do PlantVillage. NAO e igual ao id em
+    -- tres casos: Cherry_(including_sour), Corn_(maize) e Pepper,_bell.
+    -- Derivar o prefixo do id por concatenacao funcionaria por acidente hoje
+    -- e quebraria a mascara por cultura nessas tres.
+    prefixo_modelo  TEXT NOT NULL UNIQUE
+);
+
+-- As 12 classes "healthy" do PlantVillage. Tabela separada de `doenca` porque
+-- planta saudavel nao tem perfil de sintomas: se morasse la, apareceria como
+-- hipotese no fluxo por sintomas.
+CREATE TABLE classe_saudavel (
+    cultura_id    TEXT PRIMARY KEY REFERENCES cultura(id),
+    classe_modelo TEXT NOT NULL UNIQUE,
+    observacao    TEXT
 );
 
 -- Parte da planta onde o sintoma e observado. A `ordem` existe porque a
@@ -54,8 +69,8 @@ CREATE TABLE sintoma (
 CREATE TABLE doenca (
     id                    TEXT PRIMARY KEY,
     cultura_id            TEXT NOT NULL REFERENCES cultura(id),
-    -- Classe correspondente no PlantVillage, ou NULL quando o modelo da
-    -- fase 5 nao sabe reconhecer esta doenca e so o fluxo por sintomas
+    -- Classe correspondente no PlantVillage, ou NULL quando o modelo de
+    -- imagem nao sabe reconhecer esta doenca e so o fluxo por sintomas
     -- chega ate ela.
     classe_modelo         TEXT,
     nome                  TEXT NOT NULL,
@@ -136,8 +151,19 @@ def validar(base: dict) -> None:
     ids_doencas: set[str] = set()
     classes: set[str] = set()
     sintomas_usados: set[str] = set()
+    prefixos: dict[str, str] = {}
 
     for cultura in base["culturas"]:
+        prefixo = cultura.get("prefixo_modelo")
+        if not prefixo:
+            erros.append(f"cultura {cultura['id']}: sem prefixo_modelo")
+        elif prefixo in prefixos:
+            erros.append(
+                f"cultura {cultura['id']}: prefixo_modelo '{prefixo}' ja usado "
+                f"por {prefixos[prefixo]}")
+        else:
+            prefixos[prefixo] = cultura["id"]
+
         for d in cultura["doencas"]:
             if d["id"] in ids_doencas:
                 erros.append(f"doenca duplicada: {d['id']}")
@@ -148,6 +174,13 @@ def validar(base: dict) -> None:
                 if classe in classes:
                     erros.append(f"classe_modelo duplicada: {classe}")
                 classes.add(classe)
+                # A classe tem que pertencer a cultura que a hospeda. Sem esta
+                # checagem, colar `Potato___Early_blight` numa doenca de tomate
+                # passaria batido e a mascara por cultura zeraria a saida certa.
+                if prefixo and not classe.startswith(f"{prefixo}___"):
+                    erros.append(
+                        f"doenca {d['id']}: classe_modelo '{classe}' nao "
+                        f"comeca com o prefixo da cultura '{prefixo}___'")
 
             if not d["sintomas"]:
                 erros.append(f"doenca {d['id']}: nenhum sintoma no perfil")
@@ -177,10 +210,80 @@ def validar(base: dict) -> None:
         erros.append(
             f"sintomas no catalogo que nenhuma doenca usa: {sorted(orfaos)}")
 
+    erros += _validar_saudaveis(base, prefixos, classes)
+
     if erros:
         raise BaseInvalida(
             f"{len(erros)} problema(s) na base de conhecimento:\n  - "
             + "\n  - ".join(erros))
+
+
+def _validar_saudaveis(
+    base: dict, prefixos: dict[str, str], classes_doenca: set[str]
+) -> list[str]:
+    """Checa as 12 classes saudaveis contra as 26 de doenca.
+
+    As duas listas juntas sao as 38 saidas do modelo. Se elas nao fecharem
+    aqui, o contrato gerado por `app/modelo.py` sai com o numero errado de
+    classes e todo o mapeamento indice -> rotulo desanda.
+    """
+    erros: list[str] = []
+    culturas = {c["id"] for c in base["culturas"]}
+
+    com_saudavel: set[str] = set()
+    classes_saudaveis: set[str] = set()
+
+    for s in base["saudaveis"]:
+        cid = s["cultura_id"]
+        if cid not in culturas:
+            erros.append(f"saudavel: cultura inexistente '{cid}'")
+            continue
+        if cid in com_saudavel:
+            erros.append(f"saudavel: cultura repetida '{cid}'")
+        com_saudavel.add(cid)
+
+        prefixo = next((p for p, c in prefixos.items() if c == cid), None)
+        esperada = f"{prefixo}___healthy"
+        if s["classe_modelo"] != esperada:
+            erros.append(
+                f"saudavel {cid}: classe_modelo e '{s['classe_modelo']}', "
+                f"deveria ser '{esperada}'")
+        classes_saudaveis.add(s["classe_modelo"])
+
+    sem_saudavel = set()
+    for c in base["culturas_sem_classe_saudavel"]:
+        cid = c["cultura_id"]
+        if cid not in culturas:
+            erros.append(f"culturas_sem_classe_saudavel: inexistente '{cid}'")
+        if cid in com_saudavel:
+            erros.append(
+                f"cultura {cid} esta em saudaveis E em "
+                f"culturas_sem_classe_saudavel")
+        if not c.get("motivo"):
+            erros.append(
+                f"culturas_sem_classe_saudavel {cid}: sem motivo. Uma cultura "
+                f"sem classe saudavel parece esquecimento; o motivo e o que "
+                f"prova que foi decisao")
+        sem_saudavel.add(cid)
+
+    faltando = culturas - com_saudavel - sem_saudavel
+    if faltando:
+        erros.append(
+            f"culturas que nao declaram ter nem nao ter classe saudavel: "
+            f"{sorted(faltando)}")
+
+    sobreposicao = classes_doenca & classes_saudaveis
+    if sobreposicao:
+        erros.append(f"classe usada como doenca e como saudavel: {sobreposicao}")
+
+    total = len(classes_doenca) + len(classes_saudaveis)
+    if total != 38:
+        erros.append(
+            f"o modelo tem 38 saidas, mas a base declara {total} classes "
+            f"({len(classes_doenca)} de doenca + {len(classes_saudaveis)} "
+            f"saudaveis)")
+
+    return erros
 
 
 def semear() -> None:
@@ -204,10 +307,10 @@ def semear() -> None:
     total_doencas = 0
     for cultura in base["culturas"]:
         con.execute(
-            "INSERT INTO cultura (id, nome, nome_cientifico, emoji)"
-            " VALUES (?, ?, ?, ?)",
-            (cultura["id"], cultura["nome"],
-             cultura["nome_cientifico"], cultura["emoji"]),
+            "INSERT INTO cultura (id, nome, nome_cientifico, emoji,"
+            " prefixo_modelo) VALUES (?, ?, ?, ?, ?)",
+            (cultura["id"], cultura["nome"], cultura["nome_cientifico"],
+             cultura["emoji"], cultura["prefixo_modelo"]),
         )
 
         for d in cultura["doencas"]:
@@ -241,6 +344,13 @@ def semear() -> None:
                  for i in d["ingredientes_ativos"]],
             )
 
+    # Depois das culturas, por causa da chave estrangeira.
+    con.executemany(
+        "INSERT INTO classe_saudavel (cultura_id, classe_modelo, observacao)"
+        " VALUES (:cultura_id, :classe_modelo, :observacao)",
+        [{"observacao": None, **s} for s in base["saudaveis"]],
+    )
+
     con.commit()
     n_culturas = len(base["culturas"])
     n_sintomas = len(base["sintomas"])
@@ -254,6 +364,8 @@ def semear() -> None:
           f"{n_sintomas} sintomas no catalogo")
     print(f"  {n_com_classe} doencas com classe no PlantVillage, "
           f"{total_doencas - n_com_classe} so por sintomas")
+    print(f"  {n_com_classe} + {len(base['saudaveis'])} saudaveis = "
+          f"{n_com_classe + len(base['saudaveis'])} saidas do modelo")
 
 
 if __name__ == "__main__":

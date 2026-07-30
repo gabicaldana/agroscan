@@ -1,0 +1,77 @@
+# O repositorio tem cinco artefatos gerados e versionados: o banco SQLite, as
+# fixtures compartilhadas, o contrato do modelo e os dois modulos TypeScript.
+# Cada um tem teste de frescor, mas ate aqui esses testes so rodavam na maquina
+# de quem lembrasse de roda-los. Este workflow e o que torna a promessa real.
+#
+# A ordem importa: `app.fixtures` e `app.modelo` leem o banco que `app.db`
+# acabou de gerar, e `npm run base` le o contrato que `app.modelo` escreveu.
+#
+# A checagem final e a que vale: depois de regerar tudo, o diretorio de
+# trabalho tem que estar limpo. Se um arquivo gerado mudou, alguem editou uma
+# fonte e esqueceu de regerar - e o commit teria entrado com base e artefato
+# divergentes.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Sem `pip install`: o motor, a validacao da base e a geracao dos
+      # artefatos sao stdlib puro. Se um dia isto precisar de dependencia,
+      # e sinal de que algo entrou no lugar errado.
+      - name: Validar a base e regerar os artefatos
+        run: |
+          python -m app.db
+          python -m app.fixtures
+          python -m app.modelo
+
+      - name: Testes do motor de referencia
+        run: python -m unittest discover -s tests -t . -v
+
+      - name: Instalar o app
+        working-directory: web
+        run: npm ci
+
+      - name: Regerar os modulos gerados
+        working-directory: web
+        run: npm run base
+
+      - name: Testes do porte em TypeScript
+        working-directory: web
+        run: npm test
+
+      - name: Lint e build
+        working-directory: web
+        run: |
+          npm run lint
+          npm run build
+
+      - name: Nenhum artefato gerado ficou para tras
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Artefatos gerados divergem das fontes:"
+            git status --porcelain
+            git diff
+            echo
+            echo "Rode: python -m app.db && python -m app.fixtures && python -m app.modelo"
+            echo "     cd web && npm run base"
+            exit 1
+          fi
