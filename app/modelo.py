@@ -72,6 +72,31 @@ PREPROCESSAMENTO = {
     },
 }
 
+# Recusa: quando o app deve dizer "nao sei" em vez de responder.
+#
+# Os tres numeros sao NULOS ate a fase 4b: eles saem da curva risco-cobertura
+# medida sobre imagens de validacao, e chutar um limiar seria pior que nao ter
+# nenhum - daria ao agronomo uma recusa que nao significa nada. Enquanto forem
+# nulos, o app calcula as pontuacoes e diz que o modelo nao esta calibrado.
+RECUSA = {
+    "temperatura": None,
+    "limiar_msp": None,
+    "limiar_energia": None,
+    "calibrado_em": None,
+    "medir_sobre": (
+        "LOGITS CRUS, antes da mascara por cultura. A mascara renormaliza "
+        "sobre as classes de uma cultura so, e isso faz QUALQUER imagem - "
+        "inclusive uma mangueira apontada como tomate - sair com confianca "
+        "alta. Calcular a recusa depois da mascara e o mesmo que nao ter "
+        "recusa."
+    ),
+    "sabores_de_fora_da_distribuicao": [
+        "cultura desconhecida - cafe, cana, feijao, manga",
+        "cultura conhecida e classe desconhecida - doenca de soja, que o "
+        "modelo so conhece saudavel. E o caso mais perigoso do app.",
+    ],
+}
+
 # O que o notebook tem que garantir. Fica aqui, e nao so na prosa do notebook,
 # para que a checagem seja copiavel e nao dependa de alguem lembrar.
 CONTRATO_DE_TREINO = {
@@ -161,6 +186,7 @@ def montar() -> dict:
         "classes": classes,
         "por_cultura": por_cultura,
         "preprocessamento": PREPROCESSAMENTO,
+        "recusa": RECUSA,
         "contrato_de_treino": CONTRATO_DE_TREINO,
         # Preenchidos quando o ONNX voltar do Colab. O sha256 e conferido no
         # download durante o build, para o app nunca servir um modelo que nao

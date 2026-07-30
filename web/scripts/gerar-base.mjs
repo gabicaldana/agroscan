@@ -169,6 +169,20 @@ export type Preprocessamento = {
   normalizacao: { escala: number; media: number[]; desvio: number[] };
   saida: { tipo: string; classes: number };
 };
+
+/**
+ * Limiares de recusa. Nulos ate a fase 4b medir a curva risco-cobertura:
+ * chutar um numero daria ao agronomo uma recusa que nao significa nada.
+ */
+export type Recusa = {
+  temperatura: number | null;
+  limiarMsp: number | null;
+  limiarEnergia: number | null;
+  calibradoEm: string | null;
+  /** Lembrete de que a pontuacao vai sobre os logits CRUS, antes da mascara. */
+  medirSobre: string;
+  saboresDeForaDaDistribuicao: string[];
+};
 `;
 
 export function gerarFonteBase(
@@ -203,6 +217,7 @@ export function gerarFonteContrato(
       contrato.porCultura,
     ),
     bloco("PREPROCESSAMENTO", "Preprocessamento", contrato.preprocessamento),
+    bloco("RECUSA", "Recusa", contrato.recusa),
     bloco(
       "ARQUIVO",
       "{ nome: string | null; sha256: string | null }",

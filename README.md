@@ -7,11 +7,11 @@ condições climáticas que favorecem o aparecimento.
 **▶ [agroscan-blond.vercel.app](https://agroscan-blond.vercel.app)** - instalável
 no celular e funcional em modo avião.
 
-> **Status:** fases 1 a 3 concluídas e a 4 em andamento. O agrônomo já
-> diagnostica de verdade, marcando sintomas, sem foto nenhuma e sem rede. Base
-> de 29 doenças, motor em Python e TypeScript verificados um contra o outro, e
-> as 38 saídas do futuro modelo já mapeadas, mascaradas por cultura e testadas
-> - antes de existir modelo.
+> **Status:** fases 1 a 3 concluídas; 4 e 5 em andamento. O agrônomo já
+> diagnostica de verdade, marcando sintomas, sem foto nenhuma e sem rede. A
+> câmera abre, captura e pré-processa; as 38 saídas do futuro modelo já estão
+> mapeadas, mascaradas por cultura e testadas. **Falta o modelo** - e até ele
+> chegar, o app diz isso em vez de chutar.
 
 ---
 
@@ -34,8 +34,8 @@ Daí as três camadas de resposta:
                      │
         ┌────────────▼────────────┐
         │  1. CNN local (ONNX)    │  38 classes · ~3 MB · offline · grátis
-        │     + máscara/cultura   │
-        └────────────┬────────────┘
+        │     + máscara/cultura   │  ⬜ falta o modelo; o resto do caminho
+        └────────────┬────────────┘     (câmera, preproc, máscara, recusa) ✅
                      │  confiança alta? ──sim──> laudo
                     não
         ┌────────────▼────────────┐
@@ -108,19 +108,21 @@ python -m app.db          # valida o JSON e gera data/agroscan.db
 python -m app.cli         # diagnóstico interativo no terminal
 python -m app.fixtures    # regera as fixtures compartilhadas com o TS
 python -m app.modelo      # regera o contrato das 38 classes do modelo
+python -m app.preprocessamento   # regera as fixtures de pixel
 python -m unittest discover -s tests -t .
 ```
 
-### Depois de mexer na base de conhecimento
+### Depois de mexer na base ou no pré-processamento
 
 ```bash
-python -m app.db && python -m app.fixtures && python -m app.modelo
+python -m app.db && python -m app.fixtures && python -m app.modelo && python -m app.preprocessamento
 cd web && npm run base && npm test
 ```
 
-São cinco artefatos gerados e versionados - as fixtures, o contrato do modelo,
-os dois módulos TypeScript e o banco. Todos têm teste de frescor, e o CI roda
-exatamente esta sequência: nenhum deles pode envelhecer em silêncio.
+São seis artefatos gerados e versionados - as fixtures do motor, as de pixel, o
+contrato do modelo, os dois módulos TypeScript e o banco. Todos têm teste de
+frescor, e o CI roda exatamente esta sequência e falha se sobrar diferença:
+nenhum deles pode envelhecer em silêncio.
 
 ---
 
@@ -326,6 +328,87 @@ Quando o modelo chegar, a fase 5 liga o ONNX na entrada disso.
 
 ---
 
+## A foto, do sensor ao laudo
+
+```
+câmera (1280×1280)
+  → preprocessamento.ts   redimensiona e normaliza IGUAL ao treino
+  → classificador.ts      logits crus                        ⬜ falta o modelo
+  → recusa.ts             decide sobre os LOGITS CRUS
+  → modelo.ts             máscara por cultura, e só então a resposta
+  → laudo
+```
+
+Tudo isso já roda, menos a caixa marcada. Medido no aparelho: **16 a 28 ms**
+da captura até a resposta, num quadro 1280×1280 - o redimensionamento escrito à
+mão não é gargalo.
+
+### Pré-processamento é código do projeto, não `transforms.Resize`
+
+O tensor que o modelo recebe no campo tem que ser **idêntico** ao que ele viu
+no treino. Se o app redimensiona de um jeito e o treino de outro, o modelo
+responde com a mesma confiança de sempre sobre uma imagem que nunca viu - e a
+perda de acurácia some dentro de um número que continua parecendo bom.
+
+O `drawImage` do navegador não serve: ele não redimensiona igual ao PIL nem
+igual a si mesmo entre navegadores. Havia duas saídas - reproduzir o PIL bit a
+bit em TypeScript, ou definir o algoritmo aqui e mandar o treino usar este. A
+primeira acorrentaria o projeto a detalhes internos do PIL (ele calcula os
+coeficientes em ponto fixo de 22 bits). Escolhemos a segunda.
+
+Então o algoritmo mora em `app/preprocessamento.py`, é portado em
+`web/lib/preprocessamento.ts`, e os dois são comparados por **digest SHA-256 do
+tensor float32** sobre imagens geradas por fórmula - nenhuma imagem binária no
+repositório. Sete casos, cobrindo ampliação, redução, retrato, paisagem e
+tamanhos ímpares. Um único valor diferente no último bit muda o digest.
+
+É um filtro triangular com suporte escalado - o mesmo algoritmo do PIL, em
+ponto flutuante. Quando a imagem diminui, a janela do filtro cresce junto: é
+isso que impede que reduzir uma folha com nervuras finas produza faixas de
+moiré que não existem na planta, e que o modelo classificaria como textura.
+Os testes provam os dois lados disso: listras de 1 px reduzidas viram cinza
+(desvio 0,06), e as mesmas listras ampliadas mantêm o contraste (1,26).
+
+> O notebook da fase 4b tem que usar esta transformação na avaliação e no
+> export. É por isso que ela está pronta antes do treino.
+
+### A recusa vai sobre os logits crus, e isso não é detalhe
+
+A máscara por cultura **destrói** a confiança como sinal de fora-da-distribuição.
+
+Renormalizar sobre as dez classes de tomate dá à líder um piso de 10% por pior
+que seja a foto - e esse piso mede como o modelo divide a cultura, não o quanto
+ele reconheceu a imagem. Para laranja, que tem uma classe só, o piso é
+**100%**: qualquer imagem apontada como laranja sai com confiança total,
+inclusive uma folha de café.
+
+Por isso `recusa.ts` recebe os logits crus, antes da máscara, e calcula três
+pontuações que falham de formas diferentes: MSP (satura em modelos confiantes),
+energia livre (não satura) e margem entre o primeiro e o segundo (pega hesitação
+entre classes plausíveis, que é diferente de não reconhecer nada). E por isso o
+contrato exige que o modelo exporte **logits, nunca softmax** - com o softmax
+dentro do grafo, temperatura e energia ficam impossíveis de calcular no cliente.
+
+**Os limiares estão nulos**, de propósito. Eles saem da curva risco-cobertura
+medida na fase 4b; chutar um número daria ao agrônomo uma recusa que não
+significa nada. Até lá o app calcula as pontuações e declara que não está
+calibrado.
+
+### O modelo é um buraco com forma
+
+`classificador.ts` é uma interface, não um runtime. Hoje devolve `null`, o app
+diz o que falta e oferece o fluxo por sintomas - não é erro, é o estado
+previsto do produto nesta fase.
+
+O que já está pronto e testado é a defesa que a fase 5b vai precisar:
+`conferirClasses` compara a lista gravada dentro do ONNX com a do contrato e
+recusa rodar se divergir. O cenário que ela pega é o provável neste app -
+service worker servindo um modelo antigo junto de um bundle novo: os dois
+carregam, a inferência roda, cada índice aponta para a doença errada, e nenhuma
+tela quebra.
+
+---
+
 ## Sistema de design - "ferramenta de campo"
 
 O contexto de uso dita o visual: sol a pino, mão suja, talvez luva, pressa.
@@ -352,8 +435,9 @@ rótulo textual, para continuar legível por quem não distingue as cores.
 | 2 | PWA instalável, sistema de design, telas navegáveis | ✅ |
 | 3 | Base de 29 doenças, motor portado para TS, tela de sintomas | ✅ |
 | 4a | Contrato das 38 classes, máscara por cultura, laudo saudável | ✅ |
+| 5a | Câmera, pré-processamento com paridade de pixel, recusa | ✅ |
 | 4b | Modelo em Colab + validação honesta em campo | ⬜ |
-| 5 | Câmera e inferência local com máscara e recusa | ⬜ |
+| 5b | Ligar o ONNX e calibrar os limiares de recusa | ⬜ |
 | 6 | Escalonamento para qualquer planta | ⬜ |
 | 7 | Caderno de campo (IndexedDB, GPS, exportação) | ⬜ |
 
@@ -391,9 +475,11 @@ app/                                Python: motor de referência + tooling de da
   diagnostico.py                    motor de referência
   fixtures.py                       gera o contrato compartilhado com o TS
   modelo.py                         deriva a ordem canônica das 38 classes
+  preprocessamento.py               referência de pixel: resize, crop, normalize
 tests/
   test_diagnostico.py               testes do motor de referência
   test_modelo.py                    as 38 classes escritas à mão + validações
+  test_preprocessamento.py          filtro, antisserrilhamento, contrato de pixel
   fixtures/                         entrada + saída esperada, versionadas
 web/                                Next.js 16 · TypeScript · Tailwind 4 · PWA
   app/                              rotas (App Router)
@@ -402,9 +488,13 @@ web/                                Next.js 16 · TypeScript · Tailwind 4 · PW
     diagnostico.ts                  porte do motor - roda no navegador
     diagnostico.test.ts             paridade com o Python, via fixtures
     modelo.ts                       máscara por cultura sobre a saída do modelo
-    modelo.test.ts                  testado com vetores sintéticos
+    preprocessamento.ts             porte do resize/normalize, paridade por digest
+    recusa.ts                       MSP, energia e margem sobre os logits crus
+    classificador.ts                a costura do ONNX - hoje devolve null
+    diagnostico-por-imagem.ts       orquestra foto → laudo
     base-conhecimento.ts            gerado do JSON por `npm run base`
     contrato-modelo.ts              gerado - a ordem é copiada, nunca recalculada
+  components/Camera.tsx             getUserMedia, visor e captura em resolução nativa
   public/sw.js                      service worker escrito à mão
   scripts/gerar-base.mjs            JSON curados → módulos TS embutidos no bundle
   scripts/gerar-icones.mjs          ícones do PWA reprodutíveis por código

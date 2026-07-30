@@ -42,6 +42,7 @@ jobs:
           python -m app.db
           python -m app.fixtures
           python -m app.modelo
+          python -m app.preprocessamento
 
       - name: Testes do motor de referencia
         run: python -m unittest discover -s tests -t . -v
@@ -71,7 +72,7 @@ jobs:
             git status --porcelain
             git diff
             echo
-            echo "Rode: python -m app.db && python -m app.fixtures && python -m app.modelo"
+            echo "Rode: python -m app.db && python -m app.fixtures && python -m app.modelo && python -m app.preprocessamento"
             echo "     cd web && npm run base"
             exit 1
           fi

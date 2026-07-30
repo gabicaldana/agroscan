@@ -44,6 +44,20 @@ export type Preprocessamento = {
   saida: { tipo: string; classes: number };
 };
 
+/**
+ * Limiares de recusa. Nulos ate a fase 4b medir a curva risco-cobertura:
+ * chutar um numero daria ao agronomo uma recusa que nao significa nada.
+ */
+export type Recusa = {
+  temperatura: number | null;
+  limiarMsp: number | null;
+  limiarEnergia: number | null;
+  calibradoEm: string | null;
+  /** Lembrete de que a pontuacao vai sobre os logits CRUS, antes da mascara. */
+  medirSobre: string;
+  saboresDeForaDaDistribuicao: string[];
+};
+
 export const TOTAL_DE_CLASSES: number = 38;
 
 export const CLASSES: readonly ClasseModelo[] = [
@@ -415,6 +429,18 @@ export const PREPROCESSAMENTO: Preprocessamento = {
     "tipo": "logits",
     "classes": 38
   }
+};
+
+export const RECUSA: Recusa = {
+  "temperatura": null,
+  "limiarMsp": null,
+  "limiarEnergia": null,
+  "calibradoEm": null,
+  "medirSobre": "LOGITS CRUS, antes da mascara por cultura. A mascara renormaliza sobre as classes de uma cultura so, e isso faz QUALQUER imagem - inclusive uma mangueira apontada como tomate - sair com confianca alta. Calcular a recusa depois da mascara e o mesmo que nao ter recusa.",
+  "saboresDeForaDaDistribuicao": [
+    "cultura desconhecida - cafe, cana, feijao, manga",
+    "cultura conhecida e classe desconhecida - doenca de soja, que o modelo so conhece saudavel. E o caso mais perigoso do app."
+  ]
 };
 
 export const ARQUIVO: { nome: string | null; sha256: string | null } = {

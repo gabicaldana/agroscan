@@ -370,6 +370,17 @@
       "classes": 38
     }
   },
+  "recusa": {
+    "temperatura": null,
+    "limiar_msp": null,
+    "limiar_energia": null,
+    "calibrado_em": null,
+    "medir_sobre": "LOGITS CRUS, antes da mascara por cultura. A mascara renormaliza sobre as classes de uma cultura so, e isso faz QUALQUER imagem - inclusive uma mangueira apontada como tomate - sair com confianca alta. Calcular a recusa depois da mascara e o mesmo que nao ter recusa.",
+    "sabores_de_fora_da_distribuicao": [
+      "cultura desconhecida - cafe, cana, feijao, manga",
+      "cultura conhecida e classe desconhecida - doenca de soja, que o modelo so conhece saudavel. E o caso mais perigoso do app."
+    ]
+  },
   "contrato_de_treino": {
     "ordem_das_classes": "sorted() sobre os rotulos, que e o que torchvision.datasets.ImageFolder produz. Ordenacao por ponto de codigo, nao alfabetica.",
     "assercao_obrigatoria": "assert dataset.classes == [c['classe'] for c in contrato['classes']] - pega espelho do PlantVillage que 'conserta' o sublinhado final de Corn_(maize)___Common_rust_ ou troca por sublinhado o espaco de Tomato___Spider_mites Two-spotted_spider_mite.",

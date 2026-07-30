@@ -1,0 +1,283 @@
+{
+  "_comentario": "GERADO AUTOMATICAMENTE por `python -m app.preprocessamento`. Nao editar a mao. Contrato de pixel entre a referencia em Python e o porte em TypeScript: as imagens sao geradas por formula dos dois lados, e o tensor resultante tem que ter o mesmo digest. E o que garante que o modelo receba no campo exatamente o que recebeu no treino.",
+  "gerado_por": "python -m app.preprocessamento",
+  "parametros": {
+    "entrada": {
+      "largura": 224,
+      "altura": 224,
+      "canais": 3,
+      "layout": "NCHW",
+      "tipo": "float32"
+    },
+    "redimensionamento": {
+      "lado_menor": 256,
+      "recorte": "central",
+      "metodo": "bilinear",
+      "cantos_alinhados": false
+    },
+    "normalizacao": {
+      "escala": 255.0,
+      "media": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "desvio": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    },
+    "saida": {
+      "tipo": "logits",
+      "classes": 38
+    }
+  },
+  "casos": [
+    {
+      "padrao": "gradiente",
+      "largura": 300,
+      "altura": 200,
+      "apos_redimensionar": [
+        384,
+        256
+      ],
+      "esperado": {
+        "sha256": "f56f4a9bf3cf31463108faa766145ca02e7374ae4fcc8159832db3c384c8816f",
+        "primeiros": [
+          -1.220727,
+          -1.207349,
+          -1.19397,
+          -1.180591,
+          -1.167212,
+          -1.153834,
+          -1.141793,
+          -1.141793
+        ],
+        "ultimos": [
+          1.919552,
+          1.924871,
+          1.932871,
+          1.939322,
+          1.945653,
+          1.953772,
+          1.959091,
+          1.966734
+        ],
+        "minimo": -1.766271,
+        "maximo": 2.141621,
+        "media": 0.21791
+      }
+    },
+    {
+      "padrao": "xadrez",
+      "largura": 224,
+      "altura": 224,
+      "apos_redimensionar": [
+        256,
+        256
+      ],
+      "esperado": {
+        "sha256": "5105665e73d9944ee323b661e2b10c514f5cdc09576c10b7ee1c312a34f787df",
+        "primeiros": [
+          2.248908,
+          2.248908,
+          -0.753275,
+          -2.117904,
+          -2.117904,
+          -2.117904,
+          -2.117904,
+          -2.117904
+        ],
+        "ultimos": [
+          -1.804444,
+          -1.804444,
+          -1.804444,
+          -1.804444,
+          -1.804444,
+          -0.415556,
+          2.64,
+          2.64
+        ],
+        "minimo": -2.117904,
+        "maximo": 2.64,
+        "media": 0.22657
+      }
+    },
+    {
+      "padrao": "listras",
+      "largura": 101,
+      "altura": 97,
+      "apos_redimensionar": [
+        267,
+        256
+      ],
+      "esperado": {
+        "sha256": "281501f4f3fd302ce7138fd4392b2934bf8be02b81da7b689081050f14ce9941",
+        "primeiros": [
+          0.646108,
+          2.199843,
+          0.547978,
+          -1.103888,
+          -1.480055,
+          0.17181,
+          1.823676,
+          1.022276
+        ],
+        "ultimos": [
+          1.125227,
+          -0.556005,
+          -1.371652,
+          0.30958,
+          1.990811,
+          1.607957,
+          -0.073275,
+          -1.754507
+        ],
+        "minimo": -2.036129,
+        "maximo": 2.556771,
+        "media": 0.230921
+      }
+    },
+    {
+      "padrao": "listras",
+      "largura": 800,
+      "altura": 600,
+      "apos_redimensionar": [
+        341,
+        256
+      ],
+      "esperado": {
+        "sha256": "9705d0b10b0b3d81daebd153268cb661db272128e40ec3785704c498a419c0ae",
+        "primeiros": [
+          0.029824,
+          -0.033821,
+          0.065502,
+          0.116036,
+          0.150644,
+          0.065502,
+          0.000317,
+          -0.005264
+        ],
+        "ultimos": [
+          0.417778,
+          0.345753,
+          0.351434,
+          0.417778,
+          0.504433,
+          0.46921,
+          0.417778,
+          0.316689
+        ],
+        "minimo": -0.065826,
+        "maximo": 0.551441,
+        "media": 0.226516
+      }
+    },
+    {
+      "padrao": "ruido",
+      "largura": 640,
+      "altura": 480,
+      "apos_redimensionar": [
+        341,
+        256
+      ],
+      "esperado": {
+        "sha256": "3c2b2d1c954f1bb8805fa8fe1c52789086be81944f4c56ae04183ecc3e7551aa",
+        "primeiros": [
+          0.182609,
+          0.123487,
+          -0.296332,
+          -0.792775,
+          -0.644747,
+          -0.381968,
+          -0.461808,
+          0.210728
+        ],
+        "ultimos": [
+          0.450316,
+          0.678955,
+          -0.24795,
+          -0.278853,
+          -0.12259,
+          0.413506,
+          0.286512,
+          -0.014275
+        ],
+        "minimo": -1.65204,
+        "maximo": 2.051613,
+        "media": 0.225221
+      }
+    },
+    {
+      "padrao": "gradiente",
+      "largura": 200,
+      "altura": 350,
+      "apos_redimensionar": [
+        256,
+        448
+      ],
+      "esperado": {
+        "sha256": "c73e32e595c5c0eb23355df0469ee1649f8248738508d5f1533b3fc93ac3102d",
+        "primeiros": [
+          -1.854343,
+          -1.840965,
+          -1.827586,
+          -1.801631,
+          -1.783704,
+          -1.770325,
+          -1.755608,
+          -1.728851
+        ],
+        "ultimos": [
+          1.780119,
+          1.785438,
+          1.793437,
+          1.799888,
+          1.80622,
+          1.814339,
+          1.819658,
+          1.820828
+        ],
+        "minimo": -1.854343,
+        "maximo": 1.968223,
+        "media": 0.217893
+      }
+    },
+    {
+      "padrao": "xadrez",
+      "largura": 97,
+      "altura": 101,
+      "apos_redimensionar": [
+        256,
+        267
+      ],
+      "esperado": {
+        "sha256": "ad08bd8ecd91ca7bd99f9a9189b6df2fd192674bdfeec066b334529c76dfb6df",
+        "primeiros": [
+          -0.515104,
+          -0.515104,
+          -0.515104,
+          -0.515104,
+          -0.204389,
+          0.235602,
+          0.646108,
+          0.646108
+        ],
+        "ultimos": [
+          0.843125,
+          2.527153,
+          2.64,
+          2.64,
+          2.64,
+          2.64,
+          2.64,
+          2.64
+        ],
+        "minimo": -2.117904,
+        "maximo": 2.64,
+        "media": 0.227019
+      }
+    }
+  ]
+}
