@@ -21,12 +21,14 @@
 
 import {
   CLASSES,
+  IDS_FORA_DO_MODELO,
   POR_CULTURA,
   TOTAL_DE_CLASSES,
   type ClasseModelo,
 } from "./contrato-modelo.ts";
 import {
   CULTURAS,
+  CULTURAS_FORA_DO_MODELO,
   SAUDAVEIS,
   type ClasseSaudavel,
   type Cultura,
@@ -47,7 +49,43 @@ const SAUDAVEL_POR_CULTURA = new Map<string, ClasseSaudavel>(
   SAUDAVEIS.map((s) => [s.culturaId, s]),
 );
 
-/** O que o modelo pode responder para esta cultura. Vazio se ela não existe. */
+const FORA_DO_MODELO = new Set<string>(IDS_FORA_DO_MODELO);
+
+const MOTIVO_FORA_DO_MODELO = new Map<string, string>(
+  CULTURAS_FORA_DO_MODELO.map((c) => [c.culturaId, c.motivo]),
+);
+
+/**
+ * O modelo de imagem não tem saída nenhuma para esta cultura.
+ *
+ * Cana, café e algodão: o PlantVillage não as contém, nem doentes nem
+ * saudáveis. Entraram na base porque são lavouras centrais no Brasil e o
+ * escopo do app não é o do dataset, mas o modelo continua cego a elas.
+ *
+ * Isto NÃO é o mesmo que `indicesDaCultura(id).length === 0`, que também dá
+ * zero para uma cultura que não existe - e essa seria um bug, não um fato a
+ * comunicar. Quem for mostrar mensagem ao agrônomo tem que perguntar aqui.
+ */
+export function foraDoModelo(culturaId: string): boolean {
+  return FORA_DO_MODELO.has(culturaId);
+}
+
+/**
+ * Por que o modelo não cobre esta cultura, no texto curado da base.
+ *
+ * Vem do dado e não da interface: uma ausência explicada é decisão, uma
+ * ausência silenciosa parece falha do aplicativo.
+ */
+export function motivoForaDoModelo(culturaId: string): string | null {
+  return MOTIVO_FORA_DO_MODELO.get(culturaId) ?? null;
+}
+
+/**
+ * O que o modelo pode responder para esta cultura.
+ *
+ * Vazio tanto para cultura inexistente quanto para cultura fora do modelo -
+ * `foraDoModelo` é quem separa os dois casos.
+ */
 export function indicesDaCultura(culturaId: string): readonly number[] {
   return POR_CULTURA[culturaId] ?? [];
 }
@@ -71,6 +109,10 @@ export function classeSaudavelDe(culturaId: string): ClasseSaudavel | null {
  * as duas principais do Brasil - o modelo só conhece soja saudável, então uma
  * folha com ferrugem asiática cai na classe saudável com confiança alta. É
  * exatamente isso que o laudo precisa dizer em voz alta.
+ *
+ * Para cana, café e algodão devolve a lista inteira de doenças da cultura,
+ * porque o modelo não cobre nenhuma. Nesse caso a resposta útil não é esta
+ * lista e sim `foraDoModelo`, que corta o fluxo antes da foto.
  */
 export function doencasForaDoModelo(
   culturaId: string,

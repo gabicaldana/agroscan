@@ -16,8 +16,9 @@ E por isso que as duas implementacoes nao podem divergir sem que alguem veja.
 
 Os casos sao de dois tipos. Os escolhidos a mao cobrem o comportamento que
 importa (ruido, ambiguidade, desempate, limiar). A varredura automatica cobre
-as 29 doencas da base: perfil completo e sintoma isolado de cada uma. Uma
-mudanca de peso em qualquer doenca aparece em pelo menos um caso.
+TODAS as doencas da base - hoje 44 - com perfil completo e sintoma isolado de
+cada uma. Uma mudanca de peso em qualquer doenca aparece em pelo menos um
+caso, e uma cultura nova entra na varredura sozinha, sem editar este arquivo.
 
 Rodar:  python -m app.fixtures
 """

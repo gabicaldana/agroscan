@@ -173,8 +173,13 @@ class TestCatalogo(unittest.TestCase):
         PlantVillage: oferece-las seria um beco sem saida."""
         todas = {c["id"] for c in listar_culturas()}
         com_doenca = {c["id"] for c in listar_culturas(apenas_com_doencas=True)}
-        self.assertEqual(len(todas), 14)
+        self.assertEqual(len(todas), 17)
         self.assertEqual(todas - com_doenca, {"Blueberry", "Raspberry"})
+
+        # Cana, cafe e algodao NAO entram nesse filtro: o fluxo por sintomas
+        # as alcanca inteiras. O que elas nao tem e classe no modelo de
+        # imagem, que e outra coisa e nao pode virar exclusao aqui.
+        self.assertLessEqual({"Sugarcane", "Coffee", "Cotton"}, com_doenca)
 
 
 class TestFicha(unittest.TestCase):
@@ -225,14 +230,38 @@ class TestBaseDeConhecimento(unittest.TestCase):
         self.assertEqual(len(set(classes)), 26)
 
     def test_doencas_sem_classe_no_modelo_sao_declaradas(self):
-        """As que so o fluxo por sintomas alcanca. Sao intencionais: as duas
-        principais da soja no Brasil e o oidio do tomate nao tem classe no
-        PlantVillage."""
-        sem_classe = {d["id"]
-                      for c in self.base["culturas"] for d in c["doencas"]
-                      if d["classe_modelo"] is None}
-        self.assertEqual(sem_classe, {"soja_ferrugem_asiatica",
-                                      "soja_mofo_branco", "tomate_oidio"})
+        """As que so o fluxo por sintomas alcanca, separadas por MOTIVO.
+
+        Sao dois casos com consequencias diferentes para o app, e por isso o
+        teste os separa em vez de somar tudo num conjunto so:
+
+        - cultura que o modelo cobre, doenca que ele nao conhece. E o caso
+          perigoso: a folha doente cai na classe saudavel com confianca alta,
+          e so o laudo avisando salva o agronomo;
+        - cultura inteira fora do dataset. O app nem chama o modelo, porque
+          `culturas_fora_do_modelo` resolve antes da foto.
+        """
+        fora = {c["cultura_id"] for c in self.base["culturas_fora_do_modelo"]}
+
+        em_cultura_coberta = set()
+        em_cultura_fora = set()
+        for c in self.base["culturas"]:
+            for d in c["doencas"]:
+                if d["classe_modelo"] is not None:
+                    continue
+                alvo = em_cultura_fora if c["id"] in fora else em_cultura_coberta
+                alvo.add(d["id"])
+
+        self.assertEqual(
+            em_cultura_coberta,
+            {"soja_ferrugem_asiatica", "soja_mofo_branco", "tomate_oidio"})
+
+        # Toda doenca de cana, cafe e algodao esta aqui - nenhuma tem classe,
+        # porque nenhuma poderia ter.
+        n_fora = sum(len(c["doencas"]) for c in self.base["culturas"]
+                     if c["id"] in fora)
+        self.assertEqual(len(em_cultura_fora), n_fora)
+        self.assertEqual(fora, {"Sugarcane", "Coffee", "Cotton"})
 
     def test_validador_pega_sintoma_com_id_errado(self):
         """Erro de digitacao num id sumiria do perfil em silencio, e a doenca

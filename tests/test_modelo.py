@@ -185,6 +185,101 @@ class TestContrato(unittest.TestCase):
         self.assertIsNone(self.contrato["arquivo"]["sha256"])
 
 
+class TestCulturasForaDoModelo(unittest.TestCase):
+    """Cana, cafe e algodao: na base, ausentes do dataset.
+
+    Sao as tres lavouras que o PlantVillage nao contem e que o app cobre
+    mesmo assim, pelo fluxo por sintomas. O contrato tem que dizer isso de
+    forma que o TypeScript consiga distinguir 'cultura fora do modelo' de
+    'cultura que nao existe' - as duas dao lista de indices vazia, e so uma
+    delas e um fato para mostrar ao agronomo.
+    """
+
+    ESPERADAS = ["Coffee", "Cotton", "Sugarcane"]
+
+    def setUp(self):
+        self.base = carregar_json()
+        self.contrato = modelo.montar()
+
+    def test_o_contrato_declara_as_tres(self):
+        self.assertEqual(
+            self.contrato["culturas_fora_do_modelo"], self.ESPERADAS)
+
+    def test_elas_ficam_ausentes_de_por_cultura_e_nao_vazias(self):
+        """Lista vazia seria indistinguivel de cultura inexistente."""
+        for cultura in self.ESPERADAS:
+            self.assertNotIn(cultura, self.contrato["por_cultura"])
+
+    def test_nao_mexem_nas_38_saidas(self):
+        """A base cresceu de 29 para 44 doencas sem mudar o contrato do
+        modelo. E o ponto: a curadoria nao depende do dataset."""
+        self.assertEqual(len(self.contrato["classes"]), 38)
+        todos = [i for indices in self.contrato["por_cultura"].values()
+                 for i in indices]
+        self.assertEqual(sorted(todos), list(range(38)))
+
+    def test_a_base_e_o_contrato_concordam_sobre_quais_sao(self):
+        """O contrato deriva a lista da base. Se alguem editar so um dos dois
+        arquivos, o app passa a acreditar numa cobertura que nao existe."""
+        da_base = sorted(
+            c["cultura_id"] for c in self.base["culturas_fora_do_modelo"])
+        self.assertEqual(da_base, self.contrato["culturas_fora_do_modelo"])
+
+    def test_nenhuma_delas_tem_prefixo_de_modelo(self):
+        fora = set(self.ESPERADAS)
+        for c in self.base["culturas"]:
+            if c["id"] in fora:
+                self.assertIsNone(c["prefixo_modelo"], c["id"])
+            else:
+                self.assertIsNotNone(c["prefixo_modelo"], c["id"])
+
+    def test_pega_cultura_fora_do_modelo_que_declara_prefixo(self):
+        for c in self.base["culturas"]:
+            if c["id"] == "Sugarcane":
+                c["prefixo_modelo"] = "Sugarcane"
+        with self.assertRaises(BaseInvalida) as ctx:
+            validar(self.base)
+        self.assertIn("Sugarcane", str(ctx.exception))
+
+    def test_pega_prefixo_nulo_sem_declaracao(self):
+        """Uma cultura pela metade nao pode se passar por decisao de escopo."""
+        self.base["culturas_fora_do_modelo"] = [
+            c for c in self.base["culturas_fora_do_modelo"]
+            if c["cultura_id"] != "Coffee"]
+        with self.assertRaises(BaseInvalida) as ctx:
+            validar(self.base)
+        self.assertIn("Coffee", str(ctx.exception))
+
+    def test_pega_doenca_com_classe_em_cultura_fora_do_modelo(self):
+        """O caso que estragaria as 38 saidas em silencio."""
+        for c in self.base["culturas"]:
+            if c["id"] == "Coffee":
+                c["doencas"][0]["classe_modelo"] = "Coffee___rust"
+        with self.assertRaises(BaseInvalida) as ctx:
+            validar(self.base)
+        self.assertIn("fora do modelo", str(ctx.exception))
+
+    def test_pega_cultura_fora_do_modelo_com_classe_saudavel(self):
+        self.base["saudaveis"].append(
+            {"cultura_id": "Cotton", "classe_modelo": "Cotton___healthy"})
+        with self.assertRaises(BaseInvalida):
+            validar(self.base)
+
+    def test_nao_confunde_com_culturas_sem_classe_saudavel(self):
+        """As duas listas dizem coisas diferentes: laranja o modelo enxerga e
+        so nao sabe chamar de saudavel; cana ele nao enxerga."""
+        self.base["culturas_sem_classe_saudavel"].append(
+            {"cultura_id": "Sugarcane", "motivo": "qualquer"})
+        with self.assertRaises(BaseInvalida) as ctx:
+            validar(self.base)
+        self.assertIn("Sugarcane", str(ctx.exception))
+
+    def test_exige_motivo(self):
+        self.base["culturas_fora_do_modelo"][0].pop("motivo")
+        with self.assertRaises(BaseInvalida):
+            validar(self.base)
+
+
 class TestValidacaoDasSaudaveis(unittest.TestCase):
 
     def setUp(self):

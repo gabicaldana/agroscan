@@ -54,8 +54,15 @@ export type Doenca = {
 
 export type Cultura = {
   id: string;
-  /** Prefixo desta cultura nas classes do PlantVillage. Difere do id em tres. */
-  prefixoModelo: string;
+  /**
+   * Prefixo desta cultura nas classes do PlantVillage. Difere do id em tres.
+   *
+   * `null` quando o dataset nao contem a cultura de forma alguma - cana, cafe
+   * e algodao, que entraram na base por serem lavouras centrais no Brasil.
+   * Quem precisa saber se o modelo cobre uma cultura NAO deve testar este
+   * campo: use `foraDoModelo` em modelo.ts, que le a lista do contrato.
+   */
+  prefixoModelo: string | null;
   nome: string;
   nomeCientifico: string;
   emoji: string;
@@ -71,7 +78,19 @@ export type ClasseSaudavel = {
   observacao?: string;
 };
 
+/** Cultura que existe no dataset, mas sem a classe "healthy" - laranja e
+ *  abobora. O modelo responde por ela, mas nunca "sem doenca". */
 export type CulturaSemClasseSaudavel = { culturaId: string; motivo: string };
+
+/**
+ * Cultura que o PlantVillage NAO CONTEM - nem doente, nem saudavel.
+ *
+ * Nao confundir com `CulturaSemClasseSaudavel`: la o modelo responde e so nao
+ * sabe dizer "saudavel"; aqui ele nao tem saida nenhuma, e esperar a fase 4b
+ * nao muda isso. O `motivo` e o que o app mostra ao agronomo, para a ausencia
+ * nao parecer falha do aplicativo.
+ */
+export type CulturaForaDoModelo = { culturaId: string; motivo: string };
 
 export const ORGAOS: readonly Orgao[] = [
   {
@@ -248,6 +267,31 @@ export const SINTOMAS: readonly Sintoma[] = [
     "orgao": "folha"
   },
   {
+    "id": "pustulas_alaranjadas_face_inferior",
+    "nome": "Pústulas alaranjadas e pulverulentas na face inferior",
+    "orgao": "folha"
+  },
+  {
+    "id": "manchas_angulares_esbranquicadas",
+    "nome": "Manchas angulares esbranquiçadas ou acinzentadas, limitadas pelas nervuras",
+    "orgao": "folha"
+  },
+  {
+    "id": "manchas_circulares_centro_cinza_halo",
+    "nome": "Manchas circulares com centro cinza-claro e halo amarelo",
+    "orgao": "folha"
+  },
+  {
+    "id": "lesoes_estreladas_folha",
+    "nome": "Lesões de bordas rasgadas, em forma de estrela",
+    "orgao": "folha"
+  },
+  {
+    "id": "folhas_verde_azulado",
+    "nome": "Folhas de verde muito escuro, quase azulado, e quebradiças",
+    "orgao": "folha"
+  },
+  {
     "id": "lesoes_no_caule",
     "nome": "Lesões escuras no caule ou haste",
     "orgao": "caule"
@@ -270,6 +314,16 @@ export const SINTOMAS: readonly Sintoma[] = [
   {
     "id": "morte_de_ramos",
     "nome": "Seca e morte de ramos ou braços inteiros",
+    "orgao": "caule"
+  },
+  {
+    "id": "morte_de_ponteiro",
+    "nome": "Seca e morte do ponteiro (o broto do topo)",
+    "orgao": "caule"
+  },
+  {
+    "id": "nos_internos_avermelhados",
+    "nome": "Pontos ou traços avermelhados nos nós, ao cortar o colmo",
     "orgao": "caule"
   },
   {
@@ -308,6 +362,11 @@ export const SINTOMAS: readonly Sintoma[] = [
     "orgao": "fruto"
   },
   {
+    "id": "perfuracao_no_fruto",
+    "nome": "Furo redondo perto da coroa do fruto, às vezes com serragem",
+    "orgao": "fruto"
+  },
+  {
     "id": "desfolha_baixo_para_cima",
     "nome": "Queda de folhas começando pelas mais baixas",
     "orgao": "planta"
@@ -330,6 +389,21 @@ export const SINTOMAS: readonly Sintoma[] = [
   {
     "id": "amarelecimento_setorizado",
     "nome": "Amarelecimento concentrado num ramo ou setor da planta",
+    "orgao": "planta"
+  },
+  {
+    "id": "chicote_preto_no_apice",
+    "nome": "Chicote preto e recurvado saindo do topo da planta",
+    "orgao": "planta"
+  },
+  {
+    "id": "superbrotamento",
+    "nome": "Superbrotamento: muitos ramos curtos saindo do mesmo ponto",
+    "orgao": "planta"
+  },
+  {
+    "id": "internodios_curtos",
+    "nome": "Entrenós curtos, planta compacta e atarracada",
     "orgao": "planta"
   }
 ];
@@ -643,6 +717,338 @@ export const CULTURAS: readonly Cultura[] = [
     ]
   },
   {
+    "id": "Coffee",
+    "prefixoModelo": null,
+    "nome": "Café",
+    "nomeCientifico": "Coffea arabica",
+    "emoji": "☕",
+    "doencas": [
+      {
+        "id": "cafe_ferrugem",
+        "classeModelo": null,
+        "nome": "Ferrugem do cafeeiro",
+        "agente": "Hemileia vastatrix",
+        "tipoAgente": "fungo",
+        "gravidade": 5,
+        "descricao": "A doença mais cara da cafeicultura brasileira. Começa como mancha amarelada translúcida vista contra a luz e, na face inferior, forma a massa alaranjada de esporos que dá nome à doença. A perda vem da desfolha: a planta que perde folha em plena granação não enche o grão e ainda compromete a florada do ano seguinte, o que faz a bienalidade da lavoura piorar.",
+        "sintomas": [
+          {
+            "id": "pustulas_alaranjadas_face_inferior",
+            "peso": 1
+          },
+          {
+            "id": "manchas_amareladas",
+            "peso": 0.8
+          },
+          {
+            "id": "desfolha_baixo_para_cima",
+            "peso": 0.8
+          },
+          {
+            "id": "queda_precoce_folhas",
+            "peso": 0.5
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "21 a 25 °C",
+          "umidade": "Molhamento foliar por 24 h ou mais, com chuva frequente",
+          "observacao": "A epidemia acompanha a estação chuvosa e é mais severa nos talhões de carga pendente alta - a planta cheia de fruto tem menos reserva para resistir. Por isso o controle começa antes do sintoma aparecer, e não depois."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Cultivares com resistência (Catuaí resistente, IPR, Arara e similares) - é a medida de maior efeito e a única que não depende de calendário."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Adubação equilibrada e manejo da carga pendente: planta debilitada por excesso de fruto adoece mais."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Podas e espaçamento que arejem a saia do cafeeiro, reduzindo o tempo de molhamento foliar."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Programa preventivo iniciado antes do pico epidêmico, alternando cobre protetor com misturas de triazol e estrobilurina. Aplicar depois da desfolha instalada é gasto sem retorno."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Oxicloreto de cobre",
+            "grupo": "Inorgânico",
+            "acao": "protetor"
+          },
+          {
+            "nome": "Epoxiconazol + Piraclostrobina",
+            "grupo": "Triazol + Estrobilurina",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Ciproconazol + Azoxistrobina",
+            "grupo": "Triazol + Estrobilurina",
+            "acao": "sistêmico"
+          }
+        ]
+      },
+      {
+        "id": "cafe_cercosporiose",
+        "classeModelo": null,
+        "nome": "Cercosporiose (mancha-de-olho-pardo)",
+        "agente": "Cercospora coffeicola",
+        "tipoAgente": "fungo",
+        "gravidade": 3,
+        "descricao": "Manchas circulares pardas com centro cinza-claro e halo amarelo - o desenho que lhe dá o nome de olho-pardo. Ataca folha e fruto: no fruto provoca depressão e maturação forçada, que derruba a qualidade da bebida. É doença de desequilíbrio, não de clima: aparece onde falta nutrição ou onde a muda pega sol direto demais no viveiro.",
+        "sintomas": [
+          {
+            "id": "manchas_circulares_centro_cinza_halo",
+            "peso": 1
+          },
+          {
+            "id": "queda_precoce_folhas",
+            "peso": 0.6
+          },
+          {
+            "id": "lesoes_no_fruto",
+            "peso": 0.5
+          },
+          {
+            "id": "pontuacoes_pretas_na_lesao",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "20 a 25 °C",
+          "umidade": "Alta, combinada com alta luminosidade",
+          "observacao": "O gatilho principal é nutricional - lavoura com deficiência de nitrogênio ou de boro adoece mesmo em ano bom. Corrigir a adubação costuma valer mais que aplicar fungicida."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Corrigir a adubação, especialmente nitrogênio e boro: é o controle de maior efeito nesta doença."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Sombrear o viveiro e evitar estresse hídrico nas mudas."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Fungicida cúprico ou estrobilurina quando a incidência subir na fase de granação."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Hidróxido de cobre",
+            "grupo": "Inorgânico",
+            "acao": "protetor"
+          },
+          {
+            "nome": "Azoxistrobina",
+            "grupo": "Estrobilurina",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Difenoconazol",
+            "grupo": "Triazol",
+            "acao": "sistêmico"
+          }
+        ]
+      },
+      {
+        "id": "cafe_mancha_aureolada",
+        "classeModelo": null,
+        "nome": "Mancha aureolada",
+        "agente": "Pseudomonas syringae pv. garcae",
+        "tipoAgente": "bactéria",
+        "gravidade": 3,
+        "descricao": "Bacteriose de lavoura nova e de área de vento. As lesões nascem encharcadas, escurecem e ficam cercadas por um halo amarelo largo - a auréola. Avança pelo pecíolo até o ramo e mata o ponteiro. A porta de entrada é o ferimento: vento frio com chuva, granizo e até a passagem da colhedora abrem a lesão por onde a bactéria entra.",
+        "sintomas": [
+          {
+            "id": "manchas_angulares_halo_amarelo",
+            "peso": 1
+          },
+          {
+            "id": "manchas_encharcadas",
+            "peso": 0.8
+          },
+          {
+            "id": "morte_de_ponteiro",
+            "peso": 0.7
+          },
+          {
+            "id": "borda_folha_queimada",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "18 a 23 °C",
+          "umidade": "Alta, com chuva carregada de vento",
+          "observacao": "Lavoura nova, em formação e sem quebra-vento, é onde a doença mais castiga. Depois do granizo, a janela de infecção é de poucos dias."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Implantar quebra-vento: reduz o ferimento mecânico, que é a via de entrada da bactéria."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Evitar tratos culturais com a folhagem molhada e regular a colhedora para não ferir demais."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Usar mudas sadias e não replantar em cima de foco antigo sem tratar a área."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Cobre em pulverização preventiva, e antibiótico agrícola registrado logo após granizo ou vento frio com chuva."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Oxicloreto de cobre",
+            "grupo": "Inorgânico",
+            "acao": "bactericida"
+          },
+          {
+            "nome": "Casugamicina",
+            "grupo": "Antibiótico",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Hidróxido de cobre",
+            "grupo": "Inorgânico",
+            "acao": "protetor"
+          }
+        ]
+      },
+      {
+        "id": "cafe_phoma",
+        "classeModelo": null,
+        "nome": "Mancha de phoma (seca dos ponteiros)",
+        "agente": "Phoma tarda",
+        "tipoAgente": "fungo",
+        "gravidade": 3,
+        "descricao": "Doença de frio e vento. A lesão começa pela borda ou pela ponta da folha nova, com aspecto de queimadura, e progride para o ponteiro, que seca e morre. Perder o ponteiro custa mais que perder folha: é o ramo produtivo do ano seguinte que não se forma. Também queima botões florais, o que reduz a florada.",
+        "sintomas": [
+          {
+            "id": "borda_folha_queimada",
+            "peso": 1
+          },
+          {
+            "id": "morte_de_ponteiro",
+            "peso": 0.9
+          },
+          {
+            "id": "folhas_deformadas",
+            "peso": 0.4
+          },
+          {
+            "id": "queda_de_frutos",
+            "peso": 0.3
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "16 a 20 °C",
+          "umidade": "Alta, com vento frio e chuva persistente",
+          "observacao": "Regiões de altitude, no inverno e começo da primavera. Confunde-se com a mancha aureolada em campo: as duas matam ponteiro depois de tempo frio e ventoso. O halo amarelo largo é da bacteriose; a queimadura que entra pela borda da folha é da phoma."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Quebra-vento nas faces expostas ao vento frio - a mesma medida que reduz a mancha aureolada."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Evitar excesso de nitrogênio no fim do ciclo, que deixa o ponteiro tenro e suscetível."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Aplicação preventiva de cobre ou de mistura triazol com estrobilurina antes da entrada do frio."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Oxicloreto de cobre",
+            "grupo": "Inorgânico",
+            "acao": "protetor"
+          },
+          {
+            "nome": "Tebuconazol + Trifloxistrobina",
+            "grupo": "Triazol + Estrobilurina",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Mancozebe",
+            "grupo": "Ditiocarbamato",
+            "acao": "protetor (multissítio, anti-resistência)"
+          }
+        ]
+      },
+      {
+        "id": "cafe_broca",
+        "classeModelo": null,
+        "nome": "Broca-do-café",
+        "agente": "Hypothenemus hampei",
+        "tipoAgente": "inseto",
+        "gravidade": 4,
+        "descricao": "Besouro minúsculo que perfura o fruto perto da coroa e se reproduz dentro do grão. O dano é duplo: perda de peso e, principalmente, perda de tipo na classificação da bebida, que é onde o prejuízo aparece no preço. Está dentro do fruto quase o tempo todo, então a janela de controle é curta e depende de monitorar a infestação, não de calendário.",
+        "sintomas": [
+          {
+            "id": "perfuracao_no_fruto",
+            "peso": 1
+          },
+          {
+            "id": "queda_de_frutos",
+            "peso": 0.5
+          },
+          {
+            "id": "lesoes_no_fruto",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "23 a 28 °C",
+          "umidade": "Moderada a alta",
+          "observacao": "A população da safra seguinte sai dos frutos que sobraram na planta e no chão depois da colheita. Repasse e catação malfeitos são o que mantêm a infestação alta, mais do que qualquer condição de clima."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Colheita bem feita, com repasse e catação dos frutos caídos: corta o abrigo de entressafra do inseto."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Monitorar a infestação com armadilhas e amostragem de frutos, e só tratar acima do nível de controle."
+          },
+          {
+            "tipo": "biologico",
+            "descricao": "Beauveria bassiana em pulverização, e liberação do parasitoide Prorops nasuta onde disponível."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Inseticida registrado aplicado na janela em que a broca ainda está na superfície do fruto - depois que ela entra no grão, o produto não a alcança."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Beauveria bassiana",
+            "grupo": "Biológico",
+            "acao": "entomopatogênico"
+          },
+          {
+            "nome": "Ciantraniliprole",
+            "grupo": "Diamida",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Clorantraniliprole",
+            "grupo": "Diamida",
+            "acao": "ingestão"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "Corn",
     "prefixoModelo": "Corn_(maize)",
     "nome": "Milho",
@@ -804,6 +1210,345 @@ export const CULTURAS: readonly Cultura[] = [
           {
             "nome": "Mancozebe",
             "grupo": "Ditiocarbamato",
+            "acao": "protetor"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "Cotton",
+    "prefixoModelo": null,
+    "nome": "Algodão",
+    "nomeCientifico": "Gossypium hirsutum",
+    "emoji": "🧵",
+    "doencas": [
+      {
+        "id": "algodao_ramularia",
+        "classeModelo": null,
+        "nome": "Mancha-de-ramulária",
+        "agente": "Ramularia areola",
+        "tipoAgente": "fungo",
+        "gravidade": 5,
+        "descricao": "A doença que define o calendário de fungicidas do algodão no cerrado. As lesões são angulares, limitadas pelas nervuras, e ganham na face inferior uma esporulação branco-acinzentada com aspecto de pó. Começa no baixeiro e sobe. A perda vem da desfolha antecipada em plena formação de capulho, e o fungo já acumula resistência a estrobilurinas e benzimidazóis em boa parte das áreas.",
+        "sintomas": [
+          {
+            "id": "manchas_angulares_esbranquicadas",
+            "peso": 1
+          },
+          {
+            "id": "mofo_branco_face_inferior",
+            "peso": 0.8
+          },
+          {
+            "id": "desfolha_baixo_para_cima",
+            "peso": 0.8
+          },
+          {
+            "id": "manchas_amareladas",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "25 a 30 °C",
+          "umidade": "Alta, com molhamento foliar e dossel fechado",
+          "observacao": "O fechamento do dossel cria o microclima úmido no baixeiro, que é onde a epidemia começa. Por isso o primeiro sintoma quase nunca está na altura dos olhos: quem só olha o terço superior chega atrasado."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Respeitar o vazio sanitário do algodão e destruir a soqueira - o fungo sobrevive em restos culturais e em plantas tigueras."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Ajustar população e espaçamento para não fechar o dossel cedo demais."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Preferir cultivares com maior tolerância e monitorar o baixeiro desde o início do florescimento."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Programa preventivo com rotação obrigatória de modos de ação e multissítio na mistura: há resistência documentada a estrobilurina e a benzimidazol."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Fluxapiroxade + Piraclostrobina",
+            "grupo": "Carboxamida + Estrobilurina",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Difenoconazol",
+            "grupo": "Triazol",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Mancozebe",
+            "grupo": "Ditiocarbamato",
+            "acao": "protetor (multissítio, anti-resistência)"
+          }
+        ]
+      },
+      {
+        "id": "algodao_mancha_alvo",
+        "classeModelo": null,
+        "nome": "Mancha-alvo",
+        "agente": "Corynespora cassiicola",
+        "tipoAgente": "fungo",
+        "gravidade": 4,
+        "descricao": "Lesões pardas com anéis concêntricos, o desenho de alvo que dá nome à doença, muitas vezes cercadas por um halo amarelo. Como a ramulária, começa no baixeiro e desfolha de baixo para cima, e as duas ocorrem juntas na mesma lavoura - a diferença está no desenho da lesão e na esporulação da face inferior, que a mancha-alvo não tem.",
+        "sintomas": [
+          {
+            "id": "manchas_escuras_aneis",
+            "peso": 1
+          },
+          {
+            "id": "desfolha_baixo_para_cima",
+            "peso": 0.9
+          },
+          {
+            "id": "manchas_amareladas",
+            "peso": 0.5
+          },
+          {
+            "id": "queda_precoce_folhas",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "24 a 30 °C",
+          "umidade": "Alta, com molhamento foliar prolongado",
+          "observacao": "O mesmo fungo ataca soja, e a sucessão soja-algodão na mesma área mantém o inóculo alto de uma safra para a outra."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Evitar sucessão soja-algodão sem rotação com gramínea, que quebra o ciclo do fungo."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Destruir restos culturais e soqueira, onde o inóculo sobrevive."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Fungicida em programa junto com o da ramulária, alternando modos de ação."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Benzovindiflupir + Azoxistrobina",
+            "grupo": "Carboxamida + Estrobilurina",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Protioconazol + Trifloxistrobina",
+            "grupo": "Triazol + Estrobilurina",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Clorotalonil",
+            "grupo": "Isoftalonitrila",
+            "acao": "protetor (multissítio, anti-resistência)"
+          }
+        ]
+      },
+      {
+        "id": "algodao_ramulose",
+        "classeModelo": null,
+        "nome": "Ramulose",
+        "agente": "Colletotrichum gossypii var. cephalosporioides",
+        "tipoAgente": "fungo",
+        "gravidade": 4,
+        "descricao": "Ataca o ponteiro e desorganiza a arquitetura da planta. A folha nova mostra lesões de bordas rasgadas, em forma de estrela; o ponteiro morre e a planta responde emitindo muitos ramos curtos do mesmo ponto - o superbrotamento que dá nome à doença. O resultado é uma planta atarracada, com entrenós curtos e pouca estrutura para segurar capulho.",
+        "sintomas": [
+          {
+            "id": "superbrotamento",
+            "peso": 1
+          },
+          {
+            "id": "lesoes_estreladas_folha",
+            "peso": 0.9
+          },
+          {
+            "id": "morte_de_ponteiro",
+            "peso": 0.8
+          },
+          {
+            "id": "folhas_deformadas",
+            "peso": 0.6
+          },
+          {
+            "id": "internodios_curtos",
+            "peso": 0.5
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "25 a 30 °C",
+          "umidade": "Muito alta, com chuvas frequentes na fase vegetativa",
+          "observacao": "A semente infectada é a via de entrada principal, e é isso que faz o tratamento de semente valer mais que qualquer pulverização posterior."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Semente sadia, de origem conhecida e com tratamento fungicida - é a medida decisiva nesta doença."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Cultivares com resistência e destruição da soqueira."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Pulverização na fase vegetativa quando houver histórico na área e chuva prolongada."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Carbendazim",
+            "grupo": "Benzimidazol",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Tiofanato-metílico",
+            "grupo": "Benzimidazol",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Difenoconazol",
+            "grupo": "Triazol",
+            "acao": "sistêmico (tratamento de semente)"
+          }
+        ]
+      },
+      {
+        "id": "algodao_doenca_azul",
+        "classeModelo": null,
+        "nome": "Doença azul",
+        "agente": "Cotton leafroll dwarf virus, transmitido pelo pulgão Aphis gossypii",
+        "tipoAgente": "vírus",
+        "gravidade": 4,
+        "descricao": "Vira a planta num arbusto anão. As folhas ficam de um verde muito escuro, quase azulado, enrolam para baixo e endurecem; as nervuras amarelam e os entrenós encurtam. Não há defensivo que aja sobre o vírus: o manejo é todo contra o pulgão vetor e pela resistência da cultivar, que hoje é o que sustenta o algodão nas áreas de histórico.",
+        "sintomas": [
+          {
+            "id": "folhas_verde_azulado",
+            "peso": 1
+          },
+          {
+            "id": "internodios_curtos",
+            "peso": 0.9
+          },
+          {
+            "id": "crescimento_reduzido",
+            "peso": 0.8
+          },
+          {
+            "id": "nervuras_amareladas",
+            "peso": 0.7
+          },
+          {
+            "id": "folhas_deformadas",
+            "peso": 0.6
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "Qualquer temperatura que favoreça o pulgão vetor",
+          "umidade": "Períodos secos e quentes, que aumentam a população de pulgão",
+          "observacao": "A infecção precoce, ainda na fase vegetativa, é a que causa perda total da planta. Quanto mais tarde o pulgão chega, menor o dano - por isso o monitoramento do vetor no início do ciclo vale mais que no fim."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Cultivares resistentes à doença azul - é a base do manejo, e não um complemento."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Vazio sanitário e destruição de soqueira e plantas tigueras, que abrigam vírus e vetor na entressafra."
+          },
+          {
+            "tipo": "biologico",
+            "descricao": "Preservar joaninhas, crisopídeos e parasitoides do pulgão, evitando inseticida de largo espectro sem necessidade."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Controle do pulgão vetor no início do ciclo, com rotação de modos de ação. Nenhum produto age sobre o vírus já instalado na planta."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Imidacloprido",
+            "grupo": "Neonicotinoide",
+            "acao": "inseticida sistêmico (vetor)"
+          },
+          {
+            "nome": "Flonicamida",
+            "grupo": "Piridinacarboxamida",
+            "acao": "inseticida sistêmico (vetor)"
+          },
+          {
+            "nome": "Sulfoxaflor",
+            "grupo": "Sulfoximina",
+            "acao": "inseticida sistêmico (vetor)"
+          }
+        ]
+      },
+      {
+        "id": "algodao_mancha_angular",
+        "classeModelo": null,
+        "nome": "Mancha angular (bacteriose)",
+        "agente": "Xanthomonas citri pv. malvacearum",
+        "tipoAgente": "bactéria",
+        "gravidade": 3,
+        "descricao": "Lesões encharcadas e angulares, delimitadas pelas nervuras, que escurecem até quase pretas - vistas contra a luz parecem recortes geométricos na folha. Avança para a haste e para o capulho, onde apodrece a fibra e mancha a pluma. Entra pela semente e pelo respingo de chuva, o que a torna doença de safra chuvosa e de lavoura adensada.",
+        "sintomas": [
+          {
+            "id": "manchas_angulares_escuras",
+            "peso": 1
+          },
+          {
+            "id": "manchas_encharcadas",
+            "peso": 0.8
+          },
+          {
+            "id": "lesoes_no_fruto",
+            "peso": 0.5
+          },
+          {
+            "id": "lesoes_no_caule",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "28 a 35 °C",
+          "umidade": "Muito alta, com chuva de vento que espalha respingo",
+          "observacao": "Chuva com vento é o mecanismo de dispersão: o respingo carrega a bactéria de folha em folha. Tratos culturais com a lavoura molhada espalham o foco do mesmo jeito."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Semente deslintada com ácido e tratada - corta a principal via de introdução na área."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Cultivares resistentes, que existem e resolvem bem esta doença."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Não entrar na lavoura com a folhagem molhada e destruir restos culturais."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Cobre em pulverização tem efeito apenas parcial: nesta doença o controle é de semente e de cultivar."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Oxicloreto de cobre",
+            "grupo": "Inorgânico",
+            "acao": "bactericida"
+          },
+          {
+            "nome": "Hidróxido de cobre",
+            "grupo": "Inorgânico",
             "acao": "protetor"
           }
         ]
@@ -1725,6 +2470,284 @@ export const CULTURAS: readonly Cultura[] = [
     ]
   },
   {
+    "id": "Sugarcane",
+    "prefixoModelo": null,
+    "nome": "Cana-de-açúcar",
+    "nomeCientifico": "Saccharum officinarum",
+    "emoji": "🌾",
+    "doencas": [
+      {
+        "id": "cana_ferrugem_alaranjada",
+        "classeModelo": null,
+        "nome": "Ferrugem alaranjada",
+        "agente": "Puccinia kuehnii",
+        "tipoAgente": "fungo",
+        "gravidade": 4,
+        "descricao": "Pústulas alaranjadas, concentradas na face inferior da folha, que rompem a epiderme e liberam pó. Chegou ao Brasil em 2009 e derrubou de uma vez variedades que eram consideradas seguras, porque a resistência à ferrugem marrom não protege contra esta. O dano é de perda de área fotossintética em pleno crescimento do colmo, e aparece como queda de tonelagem, não como planta morta.",
+        "sintomas": [
+          {
+            "id": "pustulas_alaranjadas_face_inferior",
+            "peso": 1
+          },
+          {
+            "id": "manchas_amareladas",
+            "peso": 0.5
+          },
+          {
+            "id": "pustulas_ferruginosas",
+            "peso": 0.5
+          },
+          {
+            "id": "desfolha_baixo_para_cima",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "20 a 25 °C",
+          "umidade": "Alta, com orvalho ou molhamento foliar noturno",
+          "observacao": "O ataque é mais forte dos 4 aos 8 meses da cana. Confunde-se com a ferrugem marrom em campo, e a distinção importa: a variedade resistente a uma pode ser suscetível à outra. A cor da pústula e a face da folha onde ela se concentra são o que separa as duas."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Variedade resistente é o controle real desta doença - fungicida em canavial é operação cara e de janela curta."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Planejar o mosaico varietal do talhão para não concentrar material suscetível."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Aplicação de mistura triazol com estrobilurina em viveiro e em cana planta de alto valor, quando a severidade justificar."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Azoxistrobina + Ciproconazol",
+            "grupo": "Estrobilurina + Triazol",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Piraclostrobina + Epoxiconazol",
+            "grupo": "Estrobilurina + Triazol",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Tebuconazol",
+            "grupo": "Triazol",
+            "acao": "sistêmico"
+          }
+        ]
+      },
+      {
+        "id": "cana_ferrugem_marrom",
+        "classeModelo": null,
+        "nome": "Ferrugem marrom",
+        "agente": "Puccinia melanocephala",
+        "tipoAgente": "fungo",
+        "gravidade": 3,
+        "descricao": "A ferrugem mais antiga do canavial brasileiro, hoje contida pela resistência das variedades em boa parte das áreas. As pústulas são cor de canela a marrom, alongadas, e aparecem nas duas faces da folha, cercadas por um halo claro. Onde a variedade é suscetível, ainda causa perda relevante em cana planta.",
+        "sintomas": [
+          {
+            "id": "pustulas_ferruginosas",
+            "peso": 1
+          },
+          {
+            "id": "manchas_amareladas",
+            "peso": 0.6
+          },
+          {
+            "id": "pustulas_alaranjadas_face_inferior",
+            "peso": 0.4
+          },
+          {
+            "id": "desfolha_baixo_para_cima",
+            "peso": 0.3
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "18 a 24 °C",
+          "umidade": "Alta, com molhamento foliar prolongado",
+          "observacao": "Os perfilhos jovens são os mais atacados. Como a ferrugem alaranjada, é doença de variedade: identificar qual das duas está no talhão orienta a escolha do material na renovação."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Variedades resistentes, que já cobrem a maior parte do parque varietal brasileiro."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Mudas de viveiro sadio e monitoramento do talhão nos primeiros meses."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Fungicida apenas em viveiro ou em situação de alta severidade em material suscetível."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Azoxistrobina + Ciproconazol",
+            "grupo": "Estrobilurina + Triazol",
+            "acao": "sistêmico"
+          },
+          {
+            "nome": "Propiconazol",
+            "grupo": "Triazol",
+            "acao": "sistêmico"
+          }
+        ]
+      },
+      {
+        "id": "cana_carvao",
+        "classeModelo": null,
+        "nome": "Carvão da cana",
+        "agente": "Sporisorium scitamineum",
+        "tipoAgente": "fungo",
+        "gravidade": 4,
+        "descricao": "O sintoma é inconfundível: um chicote preto e recurvado sai do topo da planta, coberto por bilhões de esporos que o vento carrega pelo talhão inteiro. A planta afetada fica atarracada, com perfilhos finos e entrenós curtos, e não forma colmo aproveitável. A muda infectada é a via de entrada principal, e o esporo sobrevive no solo e nos restos.",
+        "sintomas": [
+          {
+            "id": "chicote_preto_no_apice",
+            "peso": 1
+          },
+          {
+            "id": "crescimento_reduzido",
+            "peso": 0.7
+          },
+          {
+            "id": "internodios_curtos",
+            "peso": 0.5
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "25 a 30 °C",
+          "umidade": "Baixa - períodos secos e quentes favorecem a doença",
+          "observacao": "É a exceção entre as doenças fúngicas do canavial: a seca favorece, e não a chuva. Cortar e ensacar o chicote ANTES que ele abra evita a dispersão de todo o talhão; deixá-lo abrir contamina a área por anos."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Variedades resistentes e mudas de viveiro sadio, com inspeção antes do plantio."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Eliminar as touceiras com chicote ensacando antes de arrancar - abrir o chicote no talhão espalha o inóculo."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Tratamento térmico da muda (água a cerca de 50 °C por 2 h), prática padrão de viveiro."
+          },
+          {
+            "tipo": "quimico",
+            "descricao": "Fungicida triazol no tratamento da muda, complementar ao térmico - nunca substituto da variedade resistente."
+          }
+        ],
+        "ingredientesAtivos": [
+          {
+            "nome": "Triadimenol",
+            "grupo": "Triazol",
+            "acao": "sistêmico (tratamento de muda)"
+          },
+          {
+            "nome": "Propiconazol",
+            "grupo": "Triazol",
+            "acao": "sistêmico"
+          }
+        ]
+      },
+      {
+        "id": "cana_raquitismo_soqueira",
+        "classeModelo": null,
+        "nome": "Raquitismo da soqueira",
+        "agente": "Leifsonia xyli subsp. xyli",
+        "tipoAgente": "bactéria",
+        "gravidade": 5,
+        "descricao": "A doença que mais custa à cana no Brasil, e a que menos se vê. Não há sintoma externo confiável: o canavial apenas rende menos a cada corte, o que se atribui a solo, clima ou idade da soqueira. O único sinal visível é interno - ao cortar o colmo no sentido longitudinal, os nós mostram pontos ou traços avermelhados nos feixes vasculares. A confirmação é laboratorial.",
+        "sintomas": [
+          {
+            "id": "nos_internos_avermelhados",
+            "peso": 1
+          },
+          {
+            "id": "crescimento_reduzido",
+            "peso": 0.8
+          },
+          {
+            "id": "internodios_curtos",
+            "peso": 0.6
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "Sem faixa definida - a bactéria não depende de clima para infectar",
+          "umidade": "A perda aparece nos períodos de déficit hídrico",
+          "observacao": "A doença é invisível em ano bom e devastadora em ano de seca, porque compromete a absorção de água. A transmissão é mecânica: facão de corte e colhedora levam a bactéria de touceira em touceira, o que faz da própria colheita a principal via de disseminação."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Muda de viveiro sadio, com origem rastreada - é a única medida realmente eficaz."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Tratamento térmico da muda (água a cerca de 50,5 °C por 2 h) na formação do viveiro."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Desinfetar facões e implementos de corte entre talhões, e priorizar a ordem de colheita das áreas sadias antes das suspeitas."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Renovar o canavial com material de viveiro certificado quando a produtividade da soqueira cair sem causa aparente."
+          }
+        ],
+        "ingredientesAtivos": []
+      },
+      {
+        "id": "cana_mosaico",
+        "classeModelo": null,
+        "nome": "Mosaico da cana",
+        "agente": "Sugarcane mosaic virus, transmitido por pulgões",
+        "tipoAgente": "vírus",
+        "gravidade": 3,
+        "descricao": "Mosaico de verde claro e verde escuro nas folhas novas, mais nítido contra a luz e na base da folha. Reduz o perfilhamento e o peso do colmo. Como toda virose de planta, não tem controle curativo: o manejo é de muda sadia e de variedade tolerante, e o pulgão é apenas o carona que leva o vírus de um talhão a outro.",
+        "sintomas": [
+          {
+            "id": "mosaico_verde_claro_escuro",
+            "peso": 1
+          },
+          {
+            "id": "crescimento_reduzido",
+            "peso": 0.5
+          },
+          {
+            "id": "manchas_amareladas",
+            "peso": 0.4
+          }
+        ],
+        "condicoesFavoraveis": {
+          "temperatura": "Sem faixa definida - depende da atividade do pulgão vetor",
+          "umidade": "Indiferente",
+          "observacao": "A muda infectada carrega o vírus para o talhão novo já no plantio. Controlar o pulgão depois da infecção instalada não recupera a planta."
+        },
+        "tratamentos": [
+          {
+            "tipo": "cultural",
+            "descricao": "Variedades tolerantes e mudas de viveiro sadio, inspecionadas visualmente antes do plantio."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Eliminar as touceiras com mosaico do viveiro (roguing), para não multiplicar material infectado."
+          },
+          {
+            "tipo": "cultural",
+            "descricao": "Controlar hospedeiros alternativos, como sorgo e capins, na borda dos talhões."
+          }
+        ],
+        "ingredientesAtivos": []
+      }
+    ]
+  },
+  {
     "id": "Tomato",
     "prefixoModelo": "Tomato",
     "nome": "Tomate",
@@ -2496,5 +3519,20 @@ export const CULTURAS_SEM_CLASSE_SAUDAVEL: readonly CulturaSemClasseSaudavel[] =
   {
     "culturaId": "Squash",
     "motivo": "O PlantVillage traz abóbora só com oídio. Não existe classe de abóbora saudável, então o modelo nunca responde 'sem doença' para abóbora."
+  }
+];
+
+export const CULTURAS_FORA_DO_MODELO: readonly CulturaForaDoModelo[] = [
+  {
+    "culturaId": "Sugarcane",
+    "motivo": "Cana-de-açúcar não existe no PlantVillage, que é um dataset de horticultura e fruticultura de clima temperado. É a maior lavoura brasileira em área colhida, e deixá-la de fora da base por causa da origem do dataset seria deixar o dataset decidir o escopo do app. Só o fluxo por sintomas a alcança."
+  },
+  {
+    "culturaId": "Coffee",
+    "motivo": "Café não existe no PlantVillage. O Brasil é o maior produtor mundial, e a ferrugem do cafeeiro é uma das doenças mais caras da agricultura brasileira. Uma folha de café apontada à câmera é o exemplo canônico de imagem fora da distribuição - o modelo, quando existir, deve recusá-la, não classificá-la."
+  },
+  {
+    "culturaId": "Cotton",
+    "motivo": "Algodão não existe no PlantVillage. A mancha-de-ramulária define o calendário de fungicidas do cerrado, e nenhuma classe do dataset chega perto dela. Só o fluxo por sintomas a alcança."
   }
 ];

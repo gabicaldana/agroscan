@@ -21,7 +21,7 @@ import {
  * servidor, sem estado remoto. E o unico modo de o app funcionar no meio do
  * talhao, que e onde ele precisa funcionar.
  *
- * O recalculo e sincrono de proposito: sao 29 doencas e 47 sintomas, e o
+ * O recalculo e sincrono de proposito: sao 44 doencas e 58 sintomas, e o
  * resultado sai em menos de um milissegundo. Estado de carregamento aqui
  * seria teatro.
  */

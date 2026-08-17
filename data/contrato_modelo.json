@@ -338,6 +338,11 @@
       37
     ]
   },
+  "culturas_fora_do_modelo": [
+    "Coffee",
+    "Cotton",
+    "Sugarcane"
+  ],
   "preprocessamento": {
     "entrada": {
       "largura": 224,
@@ -377,7 +382,8 @@
     "calibrado_em": null,
     "medir_sobre": "LOGITS CRUS, antes da mascara por cultura. A mascara renormaliza sobre as classes de uma cultura so, e isso faz QUALQUER imagem - inclusive uma mangueira apontada como tomate - sair com confianca alta. Calcular a recusa depois da mascara e o mesmo que nao ter recusa.",
     "sabores_de_fora_da_distribuicao": [
-      "cultura desconhecida - cafe, cana, feijao, manga",
+      "cultura fora do dataset, DECLARADA na base - cana, cafe e algodao. O app nem chega a chamar o modelo quando o agronomo seleciona uma delas: `culturas_fora_do_modelo` resolve o caso antes da inferencia. Continuam sendo fora-da-distribuicao para o modelo, porque nada impede que uma folha de cafe seja fotografada com 'tomate' selecionado - e ai a recusa e a unica defesa.",
+      "cultura fora do dataset e fora da base - feijao, trigo, manga. So a recusa pega, e depois dela a camada 3.",
       "cultura conhecida e classe desconhecida - doenca de soja, que o modelo so conhece saudavel. E o caso mais perigoso do app."
     ]
   },

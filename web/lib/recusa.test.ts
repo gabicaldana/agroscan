@@ -138,7 +138,9 @@ describe("estado de calibracao", () => {
 
   test("o contrato lembra onde medir, e nao e depois da mascara", () => {
     assert.match(RECUSA.medirSobre, /LOGITS CRUS/);
-    assert.equal(RECUSA.saboresDeForaDaDistribuicao.length, 2);
-    assert.match(RECUSA.saboresDeForaDaDistribuicao[1], /soja/);
+    assert.equal(RECUSA.saboresDeForaDaDistribuicao.length, 3);
+    // O ultimo e o mais perigoso: cultura que o modelo conhece, doenca que
+    // ele nao conhece. E o unico que nenhuma checagem de cultura pega.
+    assert.match(RECUSA.saboresDeForaDaDistribuicao[2], /soja/);
   });
 });

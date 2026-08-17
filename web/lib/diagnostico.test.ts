@@ -7,8 +7,8 @@
  * (`python -m app.fixtures`) e versionado. Aqui ele e a fonte da verdade: se
  * um unico campo divergir, o teste falha e diz qual caso e qual campo.
  *
- * Sao 76 casos, incluindo perfil completo e sintoma isolado de cada uma das
- * 29 doencas da base. Mexer num peso da base sem regerar as fixtures quebra
+ * Sao 106 casos, incluindo perfil completo e sintoma isolado de cada uma das
+ * 44 doencas da base. Mexer num peso da base sem regerar as fixtures quebra
  * os dois lados - que e exatamente o objetivo.
  */
 

@@ -62,6 +62,47 @@ describe("o modelo ainda nao existe, e isso e um estado previsto", () => {
   });
 });
 
+describe("cultura fora do dataset corta o fluxo antes da foto", () => {
+  test("responde com o motivo, mesmo havendo classificador", async () => {
+    // Um classificador que explode se for chamado: prova que a checagem
+    // acontece ANTES da inferencia, e nao depois de gastar o preprocessamento
+    // numa imagem cujo resultado ja se sabe inutil.
+    const explosivo: Classificador = {
+      async classificar() {
+        throw new Error("o modelo nao deveria ter sido chamado para cana");
+      },
+    };
+
+    const r = await diagnosticarImagem(foto(), "Sugarcane", explosivo);
+
+    assert.equal(r.estado, "cultura_fora_do_modelo");
+    assert.equal(r.culturaId, "Sugarcane");
+    assert.match(r.motivo, /PlantVillage/);
+  });
+
+  test("vem antes de 'sem_modelo', porque nao e questao de esperar", async () => {
+    // Sem classificador o fluxo normalmente responde `sem_modelo`, que sugere
+    // aguardar a fase 4b. Para cafe isso seria meia-verdade: nenhum treino do
+    // PlantVillage vai criar uma classe de cafe.
+    const r = await diagnosticarImagem(foto(), "Coffee", null);
+    assert.equal(r.estado, "cultura_fora_do_modelo");
+
+    const controle = await diagnosticarImagem(foto(), "Tomato", null);
+    assert.equal(controle.estado, "sem_modelo");
+  });
+
+  test("cultura coberta segue o caminho normal", async () => {
+    const r = await diagnosticarImagem(
+      foto(),
+      "Soybean",
+      classificadorQueDevolve(logitsCom("Soybean___healthy")),
+    );
+    // Soja o modelo cobre - so nao conhece as doencas dela. Continua sendo
+    // um laudo, com o aviso no lugar certo, e nao um corte de fluxo.
+    assert.equal(r.estado, "nao_calibrado");
+  });
+});
+
 describe("conferencia da lista de classes", () => {
   const corretas = CLASSES.map((c) => c.classe);
 

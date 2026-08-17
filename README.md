@@ -12,6 +12,9 @@ no celular e funcional em modo avião.
 > câmera abre, captura e pré-processa; as 38 saídas do futuro modelo já estão
 > mapeadas, mascaradas por cultura e testadas. **Falta o modelo** - e até ele
 > chegar, o app diz isso em vez de chutar.
+>
+> A base cobre **44 doenças em 17 culturas**, incluindo cana-de-açúcar, café e
+> algodão - que o dataset de imagem não contém e o app declara abertamente.
 
 ---
 
@@ -33,14 +36,15 @@ Daí as três camadas de resposta:
    Agrônomo ──> PWA instalável, offline-first
                      │
         ┌────────────▼────────────┐
-        │  1. CNN local (ONNX)    │  38 classes · ~3 MB · offline · grátis
+        │  1. CNN local (ONNX)    │  38 classes · 14 culturas · ~3 MB
         │     + máscara/cultura   │  ⬜ falta o modelo; o resto do caminho
         └────────────┬────────────┘     (câmera, preproc, máscara, recusa) ✅
+                     │  cultura fora do dataset? ──> corta aqui, e diz por quê
                      │  confiança alta? ──sim──> laudo
                     não
         ┌────────────▼────────────┐
         │  2. Fluxo por sintomas  │  ✅ pronto · offline · sem foto
-        └────────────┬────────────┘
+        └────────────┬────────────┘     cobre as 17 culturas da base
                      │  cultura desconhecida (fora da distribuição)?
         ┌────────────▼────────────┐
         │  3. Route Handler       │  exige rede · qualquer planta
@@ -48,7 +52,7 @@ Daí as três camadas de resposta:
         └────────────┬────────────┘
                      │
         ┌────────────▼────────────┐
-        │  base de conhecimento   │  ✅ 29 doenças · curada à mão
+        │  base de conhecimento   │  ✅ 44 doenças · curada à mão
         └─────────────────────────┘  embutida no bundle
                      │
       descrição · manejo · gravidade · clima · aviso legal
@@ -67,6 +71,14 @@ existir modelo.
 **Recusa antes de responder.** O app decide se a imagem pertence ao domínio
 treinado antes de arriscar um palpite. Sem isso, a camada 3 seria inútil:
 nunca saberíamos quando escalar.
+
+**O dataset não decide o escopo do app.** O PlantVillage é norte-americano, de
+horticultura e fruticultura de clima temperado. Restringir a base a ele deixaria
+de fora cana-de-açúcar, café e algodão - e um app agronômico brasileiro sem as
+três é uma lacuna que nenhuma limitação de dataset justifica. Elas estão na base,
+com as doenças que importam aqui, alcançáveis pelo fluxo por sintomas. O que o
+app **não** faz é fingir que o modelo de imagem as enxerga: a cultura é declarada
+fora do modelo, e a tela da câmera diz isso antes de pedir a foto.
 
 **Python e TypeScript com papéis separados.** Python fica com treino, export
 ONNX e validação da base. TypeScript fica com a aplicação. O motor de sintomas
@@ -184,7 +196,7 @@ O contrato é um arquivo de fixtures gerado pelo Python e versionado:
 data/base_conhecimento.json          fonte da verdade, curada à mão
         │
         ├─ python -m app.fixtures ──> tests/fixtures/casos_diagnostico.json
-        │                                  │            76 casos
+        │                                  │            106 casos
         │                                  ├──> teste Python: o motor ainda
         │                                  │    produz exatamente este arquivo
         │                                  └──> teste TS: o porte reproduz
@@ -192,10 +204,12 @@ data/base_conhecimento.json          fonte da verdade, curada à mão
         └─ npm run base ───────────> web/lib/base-conhecimento.ts
 ```
 
-Os 76 casos incluem o perfil completo e o sintoma isolado de cada uma das 29
+Os 106 casos incluem o perfil completo e o sintoma isolado de cada uma das 44
 doenças, além dos casos escolhidos a mão para ruído, ambiguidade, desempate e
-limiar. Mudar um peso na base sem regerar as fixtures quebra os dois lados -
-que é o objetivo.
+limiar. A varredura é automática sobre a base: as 15 doenças de cana, café e
+algodão entraram nas fixtures sozinhas, sem que ninguém escrevesse um caso à
+mão. Mudar um peso na base sem regerar as fixtures quebra os dois lados - que é
+o objetivo.
 
 Três armadilhas de portabilidade apareceram e estão tratadas no código:
 
@@ -210,14 +224,14 @@ ou em um ponto percentual isolado. Mas comparar com tolerância deixaria passar
 justamente as divergências reais que o teste existe para pegar, então a
 igualdade é exata.
 
-Também são comparados o catálogo de sintomas de cada cultura e as 29 fichas
-completas: **126 testes**, cobrindo toda a base.
+Também são comparados o catálogo de sintomas de cada cultura e as 44 fichas
+completas: **175 testes**, cobrindo toda a base.
 
 ---
 
 ## A base de conhecimento
 
-29 doenças em 12 culturas, com descrição, condições favoráveis, manejo
+44 doenças em 15 culturas, com descrição, condições favoráveis, manejo
 integrado e ingredientes ativos de referência. É trabalho de curadoria
 agronômica, não de programação - e é o gargalo real do projeto.
 
@@ -226,14 +240,38 @@ classes: 26 de doença e 12 de planta saudável. Cada uma das 26 já tem conteú
 pronto aqui, ligado à classe do modelo pelo campo `classe_modelo` - quando a
 CNN entrar na fase 4, não haverá classe sem laudo.
 
-**As outras 3 não têm classe no modelo** e trazem `classe_modelo: null`:
-ferrugem asiática e mofo branco da soja, e oídio do tomateiro. O PlantVillage
-não cobre nenhuma doença de soja, e um app brasileiro sem ferrugem asiática
-seria estranho. Elas são alcançadas só pelo fluxo por sintomas, e o laudo diz
-isso na cara: *"o modelo de imagem não cobre esta doença"*.
+**As outras 18 trazem `classe_modelo: null`**, e se dividem em dois casos que
+o app trata de formas diferentes.
+
+*Três estão em culturas que o modelo cobre:* ferrugem asiática e mofo branco da
+soja, e oídio do tomateiro. Este é o caso perigoso. O modelo conhece soja
+**apenas saudável**, então uma folha com ferrugem asiática cai na classe
+saudável com confiança alta - e o laudo precisa dizer isso em voz alta:
+*"o modelo de imagem não cobre esta doença"*.
+
+*Quinze estão em culturas que o dataset não contém de forma alguma:*
+cana-de-açúcar, café e algodão, com cinco doenças cada. Aqui não há resposta
+errada a temer, porque não há resposta: o app corta o fluxo da câmera antes da
+foto e explica o motivo, que vem da própria base em
+`culturas_fora_do_modelo`.
+
+| | laranja e abóbora | soja e tomate | cana, café e algodão |
+|---|---|---|---|
+| onde está declarado | `culturas_sem_classe_saudavel` | `classe_modelo: null` | `culturas_fora_do_modelo` |
+| o dataset tem a cultura? | sim | sim | **não** |
+| o modelo responde? | sim, mas nunca "saudável" | sim, e pode errar feio | não responde |
+| o que o app faz | avisa no laudo saudável | avisa no laudo saudável | corta antes da foto |
+
+As três lavouras novas entraram porque o AgroScan é um app brasileiro e cana,
+café e algodão estão entre as maiores lavouras do país. O PlantVillage não as
+tem porque é um dataset de clima temperado - e isso é uma limitação do dataset,
+não um recorte de escopo do projeto. A base registra a diferença em vez de
+herdá-la.
 
 Mirtilo e framboesa ficam de fora do fluxo por sintomas: o dataset só as
-conhece como saudáveis, e oferecê-las seria um beco sem saída.
+conhece como saudáveis, e oferecê-las seria um beco sem saída. É o inverso de
+cana, café e algodão, que ficam de fora da **câmera** e inteiras dentro do
+fluxo por sintomas.
 
 **As 12 classes saudáveis também são dado**, na chave `saudaveis`, fora de
 `culturas[].doencas`. Planta saudável não tem perfil de sintomas, e colocá-la
@@ -247,15 +285,32 @@ com greening e abóbora com oídio. Isso está declarado em
 pareceria esquecimento de curadoria. Na prática: o modelo nunca consegue
 responder "sem doença" para essas duas.
 
-O catálogo tem 47 sintomas, agrupados pela parte da planta e filtrados por
-cultura - cada cultura usa entre 2 e 20 deles. Mostrar os 47 numa tela de
-celular sob sol seria um formulário ilegível.
+O catálogo tem 58 sintomas, agrupados pela parte da planta e filtrados por
+cultura - cada cultura usa entre 4 e 26 deles. Mostrar os 58 numa tela de
+celular sob sol seria um formulário ilegível. Onze entraram com as lavouras
+novas, e vários deles são compartilhados: as pústulas alaranjadas na face
+inferior servem à ferrugem do cafeeiro e à ferrugem alaranjada da cana, que é
+o tipo de reuso que o catálogo existe para permitir.
 
 Os pesos codificam agronomia, não intuição. Onde duas doenças são
 genuinamente confundíveis no campo, a base não força uma separação artificial:
 pinta-preta e mancha-alvo do tomate empatam nos anéis concêntricos porque as
 duas realmente os fazem, e a descrição da mancha-alvo diz onde olhar para
 separar as duas. Fingir certeza aqui seria pior que a dúvida.
+
+As lavouras novas trouxeram três pares assim, de propósito:
+
+- **ferrugem alaranjada × ferrugem marrom da cana.** Cada uma tem a sua pústula
+  com peso 1.0 e a da outra com peso 0.4-0.5. A distinção importa em dinheiro:
+  a variedade resistente a uma pode ser suscetível à outra.
+- **mancha-de-ramulária × mancha-alvo do algodão.** As duas desfolham de baixo
+  para cima na mesma lavoura. Marcar só a desfolha deixa as duas empatadas, e a
+  pergunta que o motor devolve é justamente a que as separa - os anéis
+  concêntricos, que a ramulária não faz.
+- **mancha aureolada × mancha de phoma no café.** As duas matam ponteiro depois
+  de vento frio com chuva. Aqui o motor **não** promete descartar a segunda,
+  porque as duas esperam bordas de folha queimadas - e a interface repete o que
+  o motor afirma, sem arredondar para cima.
 
 ---
 
@@ -296,6 +351,12 @@ catorze casos. `Cherry` é `Cherry_(including_sour)`, `Corn` é `Corn_(maize)` e
 onze. Por isso cada cultura carrega `prefixo_modelo` explícito, e a validação
 exige que toda `classe_modelo` comece pelo prefixo da cultura que a hospeda.
 
+Cana, café e algodão carregam `prefixo_modelo: null`, porque não têm prefixo
+nenhum no dataset. O nulo sozinho seria ambíguo - poderia ser cadastro pela
+metade - então a validação exige que ele venha acompanhado de uma entrada em
+`culturas_fora_do_modelo`, com motivo. As duas metades têm que andar juntas: um
+prefixo numa cultura declarada fora, ou um nulo sem declaração, é erro de carga.
+
 ### Quatro camadas contra uma ordem errada
 
 | # | Onde | O que pega |
@@ -316,6 +377,14 @@ mascarada pela cultura, com a ficha a abrir. Está testado sobre vetores
 sintéticos: um pico em `Potato___Late_blight` mascarado por tomate desaparece;
 uma cultura sem massa nenhuma devolve `null` em vez de espalhar `NaN` pela
 tela; laranja e abóbora não têm classe saudável e o código não assume que têm.
+
+Uma sutileza que virou teste: `POR_CULTURA` **não contém** cana, café e
+algodão - e não as contém com lista vazia, o que seria diferente. Uma lista
+vazia é indistinguível de cultura inexistente, e as duas situações pedem
+respostas opostas: cultura inexistente é bug, cultura fora do modelo é um fato
+a comunicar. Por isso a checagem certa é `foraDoModelo(id)`, e nunca
+`indicesDaCultura(id).length === 0`. O teste que trava isso compara os dois
+casos lado a lado.
 
 Quando o modelo chegar, a fase 5 liga o ONNX na entrada disso.
 
@@ -436,6 +505,7 @@ rótulo textual, para continuar legível por quem não distingue as cores.
 | 3 | Base de 29 doenças, motor portado para TS, tela de sintomas | ✅ |
 | 4a | Contrato das 38 classes, máscara por cultura, laudo saudável | ✅ |
 | 5a | Câmera, pré-processamento com paridade de pixel, recusa | ✅ |
+| 3b | Cana, café e algodão na base: 44 doenças, 58 sintomas, cultura fora do modelo | ✅ |
 | 4b | Modelo em Colab + validação honesta em campo | ⬜ |
 | 5b | Ligar o ONNX e calibrar os limiares de recusa | ⬜ |
 | 6 | Escalonamento para qualquer planta | ⬜ |
@@ -451,6 +521,41 @@ O plano é treinar no PlantVillage e **reportar honestamente** a acurácia numa
 validação externa com imagens de campo (PlantDoc, e imagens brasileiras do
 Digipathos/Embrapa). A queda medida faz parte do resultado, não é algo a
 esconder.
+
+### Questão em aberto: trocar o PlantVillage pelo Digipathos
+
+O **Digipathos**, da Embrapa Informática Agropecuária, é um repositório
+brasileiro de imagens de doenças de plantas, com fotos de campo e cobertura de
+lavouras que interessam aqui - café e soja entre elas. A pergunta óbvia é por
+que não treinar nele desde já, e ela é legítima. Três coisas pesam contra a
+troca simples, e nenhuma delas é definitiva:
+
+1. **Tamanho por classe.** O PlantVillage tem ~1.400 imagens por classe, bem
+   distribuídas. Repositórios de campo costumam ser bem menores e muito
+   desbalanceados - várias classes com poucas dezenas de imagens. Treinar
+   direto num conjunto assim dá acurácia baixa e instável, e o problema não é
+   de arquitetura, é de dado.
+2. **A validação externa some.** Hoje o Digipathos é o conjunto de
+   **validação honesta** do projeto: é ele que mede a queda laboratório →
+   campo. Se virar treino, essa medição deixa de existir, e seria preciso
+   separar um novo conjunto de campo só para isso.
+3. **Duas mudanças ao mesmo tempo.** Trocar de dataset junto com a primeira
+   medição de acurácia mistura dois efeitos - a queda lab→campo e a mudança de
+   domínio - e depois não há como saber qual causou o quê.
+
+O caminho que faz mais sentido é **os dois, em ordem**: fechar a fase 4b com o
+PlantVillage e a validação externa que já está planejada, e então usar o
+Digipathos para *fine-tuning* nas culturas brasileiras, medindo o ganho contra
+uma linha de base que já existe. Antes de qualquer decisão é preciso levantar o
+inventário real de classes e imagens do repositório, e conferir os termos de
+uso - nada disso está verificado neste README.
+
+**O que já está pronto para essa troca:** a base de conhecimento é a fonte da
+verdade, e o contrato das classes é *gerado* a partir dela. No dia em que
+existir um modelo que reconheça ferrugem do cafeeiro, a mudança é preencher
+`classe_modelo` nas fichas de café e tirar `Coffee` de `culturas_fora_do_modelo`
+- o resto do caminho (câmera, pré-processamento, máscara, recusa, laudo) já
+está escrito e testado.
 
 ---
 
@@ -487,7 +592,7 @@ web/                                Next.js 16 · TypeScript · Tailwind 4 · PW
   lib/
     diagnostico.ts                  porte do motor - roda no navegador
     diagnostico.test.ts             paridade com o Python, via fixtures
-    modelo.ts                       máscara por cultura sobre a saída do modelo
+    modelo.ts                       máscara por cultura + quais o modelo não cobre
     preprocessamento.ts             porte do resize/normalize, paridade por digest
     recusa.ts                       MSP, energia e margem sobre os logits crus
     classificador.ts                a costura do ONNX - hoje devolve null

@@ -91,7 +91,14 @@ RECUSA = {
         "recusa."
     ),
     "sabores_de_fora_da_distribuicao": [
-        "cultura desconhecida - cafe, cana, feijao, manga",
+        "cultura fora do dataset, DECLARADA na base - cana, cafe e algodao. "
+        "O app nem chega a chamar o modelo quando o agronomo seleciona uma "
+        "delas: `culturas_fora_do_modelo` resolve o caso antes da inferencia. "
+        "Continuam sendo fora-da-distribuicao para o modelo, porque nada "
+        "impede que uma folha de cafe seja fotografada com 'tomate' "
+        "selecionado - e ai a recusa e a unica defesa.",
+        "cultura fora do dataset e fora da base - feijao, trigo, manga. So a "
+        "recusa pega, e depois dela a camada 3.",
         "cultura conhecida e classe desconhecida - doenca de soja, que o "
         "modelo so conhece saudavel. E o caso mais perigoso do app.",
     ],
@@ -166,10 +173,21 @@ def montar() -> dict:
         for i, classe in enumerate(ordem)
     ]
 
+    # As culturas que o dataset nao contem de forma alguma. Ficam FORA de
+    # `por_cultura`, e nao como lista vazia: uma lista vazia e indistinguivel
+    # de cultura inexistente, e as duas situacoes pedem respostas diferentes
+    # do app - "essa cultura nao existe" e um bug, "o modelo nao cobre cana"
+    # e um fato permanente que o agronomo precisa ouvir antes de tirar a foto.
+    fora_do_modelo = sorted(
+        c["cultura_id"] for c in base["culturas_fora_do_modelo"])
+
     # A mascara por cultura, pre-calculada. O app zera tudo que nao esta na
     # lista da cultura escolhida e renormaliza - e o que impede o modelo de
     # responder requeima de batata para uma foto de tomate.
-    por_cultura: dict[str, list[int]] = {c["id"]: [] for c in base["culturas"]}
+    por_cultura: dict[str, list[int]] = {
+        c["id"]: [] for c in base["culturas"]
+        if c["id"] not in set(fora_do_modelo)
+    }
     for c in classes:
         por_cultura[c["cultura_id"]].append(c["indice"])
 
@@ -185,6 +203,7 @@ def montar() -> dict:
         "total_de_classes": TOTAL_DE_CLASSES,
         "classes": classes,
         "por_cultura": por_cultura,
+        "culturas_fora_do_modelo": fora_do_modelo,
         "preprocessamento": PREPROCESSAMENTO,
         "recusa": RECUSA,
         "contrato_de_treino": CONTRATO_DE_TREINO,
@@ -211,6 +230,8 @@ def gerar() -> None:
     print(f"  {len(conteudo['classes'])} classes: {n_doenca} de doenca, "
           f"{n_saudavel} saudaveis")
     print(f"  culturas sem classe saudavel: {', '.join(sem_saudavel)}")
+    print(f"  culturas fora do modelo (sem saida nenhuma): "
+          f"{', '.join(conteudo['culturas_fora_do_modelo'])}")
 
 
 if __name__ == "__main__":

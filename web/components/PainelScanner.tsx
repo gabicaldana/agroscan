@@ -15,8 +15,12 @@ import {
   type ResultadoDaImagem,
 } from "@/lib/diagnostico-por-imagem.ts";
 import { listarCulturas } from "@/lib/diagnostico.ts";
+import { foraDoModelo, motivoForaDoModelo } from "@/lib/modelo.ts";
 
 const CULTURAS = listarCulturas();
+
+/** Derivado, nunca escrito à mão: a base cresce e o texto da tela acompanha. */
+const TOTAL_DE_DOENCAS = CULTURAS.reduce((n, c) => n + c.nDoencas, 0);
 
 /**
  * Camada 1: foto -> laudo, tudo no aparelho.
@@ -69,35 +73,99 @@ export function PainelScanner() {
           setCulturaId(c);
           setResultado(null);
         }}
+        separarPorCoberturaDoModelo
         ajuda="Informar a cultura restringe o modelo às doenças que realmente ocorrem nela - reduz bastante o erro."
       />
 
-      <Camera
-        aoCapturar={analisar}
-        ocupado={analisando}
-        legenda={
-          cultura
-            ? `Centralize a folha de ${cultura.nome.toLowerCase()}`
-            : "Centralize a folha"
-        }
-      />
+      {foraDoModelo(culturaId) ? (
+        // A câmera sai da tela de propósito. Fotografar cana não produz laudo
+        // nenhum, hoje nem depois da fase 4b, e oferecer o botão convidaria o
+        // agrônomo a gastar tempo num caminho que já se sabe sem saída.
+        <ForaDaCobertura
+          nome={cultura?.nome ?? culturaId}
+          nDoencas={cultura?.nDoencas ?? 0}
+          motivo={motivoForaDoModelo(culturaId) ?? ""}
+        />
+      ) : (
+        <>
+          <Camera
+            aoCapturar={analisar}
+            ocupado={analisando}
+            legenda={
+              cultura
+                ? `Centralize a folha de ${cultura.nome.toLowerCase()}`
+                : "Centralize a folha"
+            }
+          />
 
-      {resultado && <Aviso resultado={resultado} />}
+          {resultado && <Aviso resultado={resultado} />}
 
-      <div className="flex items-center gap-4" aria-hidden="true">
-        <span className="bg-borda h-0.5 flex-1" />
-        <span className="text-texto-suave text-sm font-semibold">ou</span>
-        <span className="bg-borda h-0.5 flex-1" />
-      </div>
+          <div className="flex items-center gap-4" aria-hidden="true">
+            <span className="bg-borda h-0.5 flex-1" />
+            <span className="text-texto-suave text-sm font-semibold">ou</span>
+            <span className="bg-borda h-0.5 flex-1" />
+          </div>
 
-      <BotaoLink href="/sintomas" variante="secundario">
-        Buscar por sintomas
-      </BotaoLink>
+          <BotaoLink href="/sintomas" variante="secundario">
+            Buscar por sintomas
+          </BotaoLink>
+        </>
+      )}
     </div>
   );
 }
 
+/**
+ * Cultura que a base cobre e o dataset não contém - cana, café, algodão.
+ *
+ * O motivo vem da base de conhecimento, não daqui: é curadoria, e escrevê-lo
+ * na interface faria a explicação divergir do dado na primeira mudança.
+ */
+function ForaDaCobertura({
+  nome,
+  nDoencas,
+  motivo,
+}: {
+  nome: string;
+  nDoencas: number;
+  motivo: string;
+}) {
+  return (
+    <>
+      <Caixa titulo={`O modelo de imagem não cobre ${nome.toLowerCase()}`}>
+        <p>{motivo}</p>
+        <p className="mt-2">
+          Nenhum treino no PlantVillage muda isso, então não é questão de
+          esperar a próxima fase: a foto não teria para onde ser classificada.
+        </p>
+      </Caixa>
+
+      <div>
+        <p className="mb-4 text-sm font-semibold">
+          O fluxo por sintomas cobre {nDoencas}{" "}
+          {nDoencas === 1 ? "doença" : "doenças"} de {nome.toLowerCase()}, com o
+          mesmo laudo completo - e não depende de foto nem de rede.
+        </p>
+        <BotaoLink href="/sintomas" variante="primario">
+          Marcar sintomas
+        </BotaoLink>
+      </div>
+    </>
+  );
+}
+
 function Aviso({ resultado }: { resultado: ResultadoDaImagem }) {
+  if (resultado.estado === "cultura_fora_do_modelo") {
+    // Normalmente a tela nem chega aqui: `ForaDaCobertura` substitui a câmera
+    // antes da captura. Fica como rede de segurança para o caso de a cultura
+    // trocar entre a captura e a resposta.
+    return (
+      <Caixa titulo="O modelo de imagem não cobre esta cultura">
+        <p>{resultado.motivo}</p>
+      </Caixa>
+    );
+  }
+
   if (resultado.estado === "sem_modelo") {
     return (
       <Caixa titulo="O modelo ainda não existe">
@@ -107,7 +175,8 @@ function Aviso({ resultado }: { resultado: ResultadoDaImagem }) {
           validação de campo honesta - até lá, o app não chuta um diagnóstico.
         </p>
         <p className="mt-2">
-          O fluxo por sintomas cobre 29 doenças e funciona agora, sem foto.
+          O fluxo por sintomas cobre {TOTAL_DE_DOENCAS} doenças e funciona
+          agora, sem foto.
         </p>
       </Caixa>
     );

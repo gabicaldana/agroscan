@@ -16,10 +16,14 @@ import {
   POR_CULTURA,
   TOTAL_DE_CLASSES,
 } from "./contrato-modelo.ts";
+import { CULTURAS } from "./base-conhecimento.ts";
 import {
   classeSaudavelDe,
+  doencasForaDoModelo,
+  foraDoModelo,
   indicesDaCultura,
   mascararPorCultura,
+  motivoForaDoModelo,
   prever,
 } from "./modelo.ts";
 
@@ -160,8 +164,12 @@ describe("classes saudaveis", () => {
 });
 
 describe("cobertura do contrato", () => {
-  test("toda cultura da base aparece na mascara", () => {
+  test("a mascara tem as 14 culturas do dataset, e so elas", () => {
+    // Nao e "toda cultura da base": a base tem 17, porque cana, cafe e
+    // algodao entraram por serem lavouras centrais no Brasil. O dataset
+    // continua com 14, e a mascara e do dataset.
     assert.equal(Object.keys(POR_CULTURA).length, 14);
+    assert.equal(CULTURAS.length, 17);
   });
 
   test("cada indice pertence a exatamente uma cultura", () => {
@@ -170,5 +178,60 @@ describe("cobertura do contrato", () => {
       todos,
       Array.from({ length: TOTAL_DE_CLASSES }, (_, i) => i),
     );
+  });
+});
+
+describe("culturas que o dataset nao contem", () => {
+  const FORA = ["Sugarcane", "Coffee", "Cotton"];
+
+  test("as tres sao reconhecidas como fora do modelo", () => {
+    for (const id of FORA) assert.equal(foraDoModelo(id), true, id);
+  });
+
+  test("cultura coberta e cultura inexistente nao sao fora do modelo", () => {
+    assert.equal(foraDoModelo("Tomato"), false);
+    // Blueberry o modelo cobre - so nao tem doenca cadastrada, que e outra
+    // coisa. Confundir as duas tiraria o mirtilo da camera sem motivo.
+    assert.equal(foraDoModelo("Blueberry"), false);
+    assert.equal(foraDoModelo("Manga"), false, "inexistente nao e 'fora'");
+  });
+
+  test("cada uma explica por que, com texto vindo da base", () => {
+    for (const id of FORA) {
+      const motivo = motivoForaDoModelo(id) ?? "";
+      assert.ok(motivo.length > 40, `${id} sem motivo curado`);
+      assert.match(motivo, /PlantVillage/);
+    }
+    assert.equal(motivoForaDoModelo("Tomato"), null);
+  });
+
+  test("a lista de indices vazia NAO serve para distinguir os dois casos", () => {
+    // Este teste existe para travar a tentacao de usar
+    // `indicesDaCultura(id).length === 0` como checagem: ele da zero tanto
+    // para cana quanto para uma cultura que nao existe, e as duas situacoes
+    // pedem respostas opostas do app.
+    assert.deepEqual(indicesDaCultura("Sugarcane"), []);
+    assert.deepEqual(indicesDaCultura("Manga"), []);
+    assert.notEqual(foraDoModelo("Sugarcane"), foraDoModelo("Manga"));
+  });
+
+  test("nenhuma delas tem classe saudavel para o modelo apontar", () => {
+    for (const id of FORA) assert.equal(classeSaudavelDe(id), null, id);
+  });
+
+  test("todas as doencas delas estao fora do alcance do modelo", () => {
+    for (const id of FORA) {
+      const cultura = CULTURAS.find((c) => c.id === id)!;
+      assert.ok(cultura.doencas.length > 0, `${id} sem doenca cadastrada`);
+      assert.equal(doencasForaDoModelo(id).length, cultura.doencas.length);
+      assert.equal(cultura.prefixoModelo, null);
+    }
+  });
+
+  test("mascarar por elas nao inventa resposta nem espalha NaN", () => {
+    const mascarado = mascararPorCultura(uniforme(), "Sugarcane");
+    assert.equal(mascarado.length, TOTAL_DE_CLASSES);
+    assert.ok(mascarado.every((v) => v === 0), "tudo zero, nenhum NaN");
+    assert.equal(prever(uniforme(), "Sugarcane"), null);
   });
 });

@@ -217,7 +217,7 @@ export function listarCulturas(apenasComDoencas = false): CulturaResumida[] {
 /**
  * So os sintomas que aparecem em alguma doenca daquela cultura.
  *
- * Das 47 entradas do catalogo, cada cultura usa entre 2 e 20. Mostrar as 47
+ * Das 58 entradas do catalogo, cada cultura usa entre 4 e 26. Mostrar as 58
  * transformaria a tela num formulario impossivel de ler sob sol.
  */
 export function listarSintomasDaCultura(culturaId: string): SintomaDoCatalogo[] {

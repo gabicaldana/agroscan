@@ -104,8 +104,15 @@ export type Doenca = {
 
 export type Cultura = {
   id: string;
-  /** Prefixo desta cultura nas classes do PlantVillage. Difere do id em tres. */
-  prefixoModelo: string;
+  /**
+   * Prefixo desta cultura nas classes do PlantVillage. Difere do id em tres.
+   *
+   * \`null\` quando o dataset nao contem a cultura de forma alguma - cana, cafe
+   * e algodao, que entraram na base por serem lavouras centrais no Brasil.
+   * Quem precisa saber se o modelo cobre uma cultura NAO deve testar este
+   * campo: use \`foraDoModelo\` em modelo.ts, que le a lista do contrato.
+   */
+  prefixoModelo: string | null;
   nome: string;
   nomeCientifico: string;
   emoji: string;
@@ -121,7 +128,19 @@ export type ClasseSaudavel = {
   observacao?: string;
 };
 
+/** Cultura que existe no dataset, mas sem a classe "healthy" - laranja e
+ *  abobora. O modelo responde por ela, mas nunca "sem doenca". */
 export type CulturaSemClasseSaudavel = { culturaId: string; motivo: string };
+
+/**
+ * Cultura que o PlantVillage NAO CONTEM - nem doente, nem saudavel.
+ *
+ * Nao confundir com \`CulturaSemClasseSaudavel\`: la o modelo responde e so nao
+ * sabe dizer "saudavel"; aqui ele nao tem saida nenhuma, e esperar a fase 4b
+ * nao muda isso. O \`motivo\` e o que o app mostra ao agronomo, para a ausencia
+ * nao parecer falha do aplicativo.
+ */
+export type CulturaForaDoModelo = { culturaId: string; motivo: string };
 `;
 
 const CABECALHO_CONTRATO = `/**
@@ -137,6 +156,12 @@ const CABECALHO_CONTRATO = `/**
  * ou um \`sort()\` padrao do JavaScript produziria outra. Trocar dois indices
  * faz o app responder a doenca errada, sempre da cultura certa, sem quebrar
  * tela nenhuma.
+ *
+ * \`POR_CULTURA\` so tem as culturas que o modelo cobre. As de
+ * \`IDS_FORA_DO_MODELO\` estao AUSENTES dele de proposito, e nao presentes com
+ * lista vazia: uma lista vazia seria indistinguivel de cultura inexistente, e
+ * as duas pedem respostas diferentes - uma e bug, a outra e um fato que o
+ * agronomo precisa ouvir antes de tirar a foto.
  */
 
 export type TipoClasse = "doenca" | "saudavel";
@@ -200,6 +225,11 @@ export function gerarFonteBase(
       "readonly CulturaSemClasseSaudavel[]",
       base.culturasSemClasseSaudavel,
     ),
+    bloco(
+      "CULTURAS_FORA_DO_MODELO",
+      "readonly CulturaForaDoModelo[]",
+      base.culturasForaDoModelo,
+    ),
   ].join("\n");
 }
 
@@ -215,6 +245,11 @@ export function gerarFonteContrato(
       "POR_CULTURA",
       "Readonly<Record<string, readonly number[]>>",
       contrato.porCultura,
+    ),
+    bloco(
+      "IDS_FORA_DO_MODELO",
+      "readonly string[]",
+      contrato.culturasForaDoModelo,
     ),
     bloco("PREPROCESSAMENTO", "Preprocessamento", contrato.preprocessamento),
     bloco("RECUSA", "Recusa", contrato.recusa),

@@ -18,7 +18,7 @@
 import type { Classificador } from "./classificador.ts";
 import { preprocessar } from "./preprocessamento.ts";
 import { avaliar, softmax, type Pontuacoes } from "./recusa.ts";
-import { prever, type Previsao } from "./modelo.ts";
+import { foraDoModelo, motivoForaDoModelo, prever, type Previsao } from "./modelo.ts";
 
 export type ImagemCapturada = {
   data: ArrayLike<number>;
@@ -27,6 +27,12 @@ export type ImagemCapturada = {
 };
 
 export type ResultadoDaImagem =
+  /**
+   * O dataset não contém esta cultura - cana, café, algodão. Diferente de
+   * `sem_modelo`: aqui não há o que esperar, porque nenhum treino do
+   * PlantVillage vai criar uma classe de cana.
+   */
+  | { estado: "cultura_fora_do_modelo"; culturaId: string; motivo: string }
   /** Nenhum modelo carregado - estado normal enquanto a fase 4b não roda. */
   | { estado: "sem_modelo" }
   /** O modelo respondeu, mas não reconheceu nada do domínio treinado. */
@@ -42,6 +48,18 @@ export async function diagnosticarImagem(
   culturaId: string,
   classificador: Classificador | null,
 ): Promise<ResultadoDaImagem> {
+  // Antes de tudo, inclusive antes de checar se há modelo carregado. Se a
+  // cultura está fora do dataset, "o modelo ainda não existe" seria uma
+  // meia-verdade que sugere esperar a fase 4b - e esperar não resolve. Também
+  // evita preprocessar uma foto cujo resultado já se sabe inútil.
+  if (foraDoModelo(culturaId)) {
+    return {
+      estado: "cultura_fora_do_modelo",
+      culturaId,
+      motivo: motivoForaDoModelo(culturaId) ?? "",
+    };
+  }
+
   if (!classificador) return { estado: "sem_modelo" };
 
   const tensor = preprocessar(imagem);

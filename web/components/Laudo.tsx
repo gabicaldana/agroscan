@@ -21,8 +21,8 @@ const ROTULO_TRATAMENTO: Record<string, string> = {
  * Laudo de uma doenca, montado a partir da base curada.
  *
  * A doenca vem pela query string (`?doenca=...`) e nao por rota dinamica de
- * proposito: e uma rota so no cache do service worker, entao as 29 fichas
- * abrem offline sem precisar pre-cachear 29 paginas.
+ * proposito: e uma rota so no cache do service worker, entao as 44 fichas
+ * abrem offline sem precisar pre-cachear 44 paginas.
  *
  * Este componente e o ponto de encontro das tres camadas de resposta. Hoje
  * so o fluxo por sintomas chega aqui; na fase 5 o modelo local passa a
@@ -150,9 +150,14 @@ export function Laudo() {
 
       <Secao titulo="Ingredientes ativos de referência">
         {ficha.ingredientesAtivos.length === 0 ? (
+          // Duas razões diferentes para a lista vazia, e a distinção importa
+          // para o agrônomo: no vírus não existe alvo para o produto agir;
+          // no raquitismo da cana existe alvo, mas nenhum defensivo alcança a
+          // bactéria dentro do colmo, e o controle é de muda e de facão.
           <p>
-            Nenhum. Não existe defensivo que aja sobre vírus de planta - o
-            manejo é todo preventivo, pelas medidas culturais acima.
+            {ficha.tipoAgente === "vírus"
+              ? "Nenhum. Não existe defensivo que aja sobre vírus de planta - o manejo é todo preventivo, pelas medidas culturais acima."
+              : "Nenhum. Não há produto que resolva esta doença depois de instalada - o manejo é todo preventivo, pelas medidas culturais acima."}
           </p>
         ) : (
           <ul className="border-borda divide-borda flex flex-col divide-y-2 rounded-xl border-2">

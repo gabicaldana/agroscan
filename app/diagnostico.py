@@ -137,7 +137,7 @@ def listar_sintomas_da_cultura(cultura_id: str) -> list[dict]:
     """So os sintomas que aparecem em alguma doenca daquela cultura.
 
     Evita mostrar ao usuario sintomas irrelevantes para o que ele plantou -
-    das 47 entradas do catalogo, cada cultura usa entre 2 e 20.
+    das 58 entradas do catalogo, cada cultura usa entre 4 e 26.
     """
     con = conectar()
     linhas = con.execute(

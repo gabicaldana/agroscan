@@ -11,6 +11,12 @@
  * ou um `sort()` padrao do JavaScript produziria outra. Trocar dois indices
  * faz o app responder a doenca errada, sempre da cultura certa, sem quebrar
  * tela nenhuma.
+ *
+ * `POR_CULTURA` so tem as culturas que o modelo cobre. As de
+ * `IDS_FORA_DO_MODELO` estao AUSENTES dele de proposito, e nao presentes com
+ * lista vazia: uma lista vazia seria indistinguivel de cultura inexistente, e
+ * as duas pedem respostas diferentes - uma e bug, a outra e um fato que o
+ * agronomo precisa ouvir antes de tirar a foto.
  */
 
 export type TipoClasse = "doenca" | "saudavel";
@@ -398,6 +404,12 @@ export const POR_CULTURA: Readonly<Record<string, readonly number[]>> = {
   ]
 };
 
+export const IDS_FORA_DO_MODELO: readonly string[] = [
+  "Coffee",
+  "Cotton",
+  "Sugarcane"
+];
+
 export const PREPROCESSAMENTO: Preprocessamento = {
   "entrada": {
     "largura": 224,
@@ -438,7 +450,8 @@ export const RECUSA: Recusa = {
   "calibradoEm": null,
   "medirSobre": "LOGITS CRUS, antes da mascara por cultura. A mascara renormaliza sobre as classes de uma cultura so, e isso faz QUALQUER imagem - inclusive uma mangueira apontada como tomate - sair com confianca alta. Calcular a recusa depois da mascara e o mesmo que nao ter recusa.",
   "saboresDeForaDaDistribuicao": [
-    "cultura desconhecida - cafe, cana, feijao, manga",
+    "cultura fora do dataset, DECLARADA na base - cana, cafe e algodao. O app nem chega a chamar o modelo quando o agronomo seleciona uma delas: `culturas_fora_do_modelo` resolve o caso antes da inferencia. Continuam sendo fora-da-distribuicao para o modelo, porque nada impede que uma folha de cafe seja fotografada com 'tomate' selecionado - e ai a recusa e a unica defesa.",
+    "cultura fora do dataset e fora da base - feijao, trigo, manga. So a recusa pega, e depois dela a camada 3.",
     "cultura conhecida e classe desconhecida - doenca de soja, que o modelo so conhece saudavel. E o caso mais perigoso do app."
   ]
 };
