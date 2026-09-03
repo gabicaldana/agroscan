@@ -604,3 +604,5 @@ web/                                Next.js 16 · TypeScript · Tailwind 4 · PW
   scripts/gerar-base.mjs            JSON curados → módulos TS embutidos no bundle
   scripts/gerar-icones.mjs          ícones do PWA reprodutíveis por código
 ```
+#   A g r o S c a n 2  
+ 
